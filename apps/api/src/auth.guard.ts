@@ -1,4 +1,4 @@
-import {CanActivate,ExecutionContext,Injectable,UnauthorizedException,ForbiddenException} from "@nestjs/common";
+import {CanActivate,ExecutionContext,Inject,Injectable,UnauthorizedException,ForbiddenException} from "@nestjs/common";
 import {Reflector} from "@nestjs/core";
 import {createRemoteJWKSet,jwtVerify} from "jose";
 import {createHash,timingSafeEqual} from "node:crypto";

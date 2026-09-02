@@ -1,4 +1,5 @@
-import {CallHandler,CanActivate,ExecutionContext,Inject,Injectable,NestInterceptor,TooManyRequestsException} from '@nestjs/common';
+import {CallHandler,CanActivate,ExecutionContext,HttpException,HttpStatus,Inject,Injectable,NestInterceptor} from '@nestjs/common';
+class TooManyRequestsException extends HttpException{constructor(){super('Too Many Requests',HttpStatus.TOO_MANY_REQUESTS)}}
 import {Observable,tap} from 'rxjs';
 import {Redis} from '@upstash/redis';
 import {DB} from './database.module.js';

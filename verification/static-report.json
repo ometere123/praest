@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-01T01:12:23.381Z",
+  "generatedAt": "2026-09-02T17:43:49.995Z",
   "passes": [
     "present README.md",
     "present docs/ARCHITECTURE.md",
@@ -27,11 +27,12 @@
     "TypeScript/TSX parser syntax"
   ],
   "warnings": [
-    "node_modules unavailable: dependency-resolved TypeScript typecheck not executed",
     "Foundry tests not executed: forge unavailable",
     "Solana cargo check not executed: cargo unavailable"
   ],
-  "failures": [],
+  "failures": [
+    "TypeScript typecheck failed"
+  ],
   "routeCounts": {
     "product": 75,
     "control": 57,
@@ -39,5 +40,5 @@
     "explorer": 12
   },
   "totalRoutes": 165,
-  "fileCount": 150
+  "fileCount": 166
 }

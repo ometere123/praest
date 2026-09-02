@@ -2,7 +2,7 @@ import {execFileSync} from "node:child_process";
 import {existsSync, readFileSync} from "node:fs";
 const strict=process.argv.includes("--strict");
 const checks=[];
-function tool(name,args=["--version"],required=true){try{const out=execFileSync(name,args,{encoding:"utf8",stdio:["ignore","pipe","pipe"]}).trim().split("\n")[0];checks.push({name,status:"ok",detail:out});return true}catch{checks.push({name,status:required?"missing":"warn",detail:"not installed in this environment"});return false}}
+function tool(name,args=["--version"],required=true){try{const out=execFileSync(name,args,{encoding:"utf8",stdio:["ignore","pipe","pipe"],shell:process.platform==="win32"}).trim().split("\n")[0];checks.push({name,status:"ok",detail:out});return true}catch{checks.push({name,status:required?"missing":"warn",detail:"not installed in this environment"});return false}}
 function file(path,required=true){const ok=existsSync(path);checks.push({name:path,status:ok?"ok":required?"missing":"warn",detail:ok?"present":"missing"});}
 
 tool("node");tool("npm");tool("git");tool("python3");tool("cargo",["--version"],false);tool("forge",["--version"],false);tool("solana",["--version"],false);tool("genlayer",["--version"],false);tool("terraform",["version"],false);tool("docker",["--version"],false);

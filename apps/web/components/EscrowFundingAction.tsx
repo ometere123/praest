@@ -60,7 +60,25 @@ export default function EscrowFundingAction({escrowId}:{escrowId:string}) {
     }catch(e:any){setState(e?.message||String(e))}finally{setBusy(false)}
   }
 
-  return <div className="card" style={{marginTop:18}}><h3>Fund settlement escrow</h3><p className="muted">PRAEST prepares the chain-specific transaction. Your wallet signs it; the backend independently verifies the destination escrow before marking it funded.</p><button className="btn primary" disabled={busy} onClick={fund}>{busy?"Working…":"Prepare and fund escrow"}</button>{state&&<p className="muted" style={{marginTop:12}}>{state}</p>}</div>;
+  return (
+    <div className="card">
+      <div className="card-head">
+        <div className="card-title">Fund settlement escrow</div>
+      </div>
+      <p className="muted" style={{ marginBottom: 14, fontSize: 13.5, lineHeight: 1.55 }}>
+        PRAEST prepares the chain-specific transaction. Your wallet signs it; the backend independently verifies the destination escrow before marking it
+        funded.
+      </p>
+      <button className="btn primary" disabled={busy} onClick={fund}>
+        {busy ? "Working…" : "Prepare and fund escrow"}
+      </button>
+      {state && (
+        <p className="muted" style={{ marginTop: 12, fontSize: 13 }}>
+          {state}
+        </p>
+      )}
+    </div>
+  );
 }
 
 async function deriveProgramId(prepared: Extract<Prepared,{protocol:"sealevel"}>){
@@ -78,4 +96,4 @@ async function waitEvmReceipt(provider:any,hash:string){
   throw new Error(`Timed out waiting for transaction ${hash}`);
 }
 const ALPHABET="123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-function base58(bytes:Uint8Array){let digits=[0];for(const byte of bytes){let carry=byte;for(let j=0;j<digits.length;j++){carry+=digits[j]*256;digits[j]=carry%58;carry=(carry/58)|0;}while(carry){digits.push(carry%58);carry=(carry/58)|0;}}let out="";for(const b of bytes){if(b===0)out+=ALPHABET[0];else break;}for(let q=digits.length-1;q>=0;q--)out+=ALPHABET[digits[q]];return out;}
+function base58(bytes:Uint8Array){let digits=[0];for(const byte of bytes){let carry=byte;for(let j=0;j<digits.length;j++){carry+=digits[j]!*256;digits[j]=carry%58;carry=(carry/58)|0;}while(carry){digits.push(carry%58);carry=(carry/58)|0;}}let out="";for(const b of bytes){if(b===0)out+=ALPHABET[0];else break;}for(let q=digits.length-1;q>=0;q--)out+=ALPHABET[digits[q]!];return out;}
