@@ -1,0 +1,9 @@
+[project]
+name="praest-sdk"
+version="0.1.0"
+description="PRAEST API SDK"
+requires-python=">=3.10"
+dependencies=["httpx>=0.27"]
+[build-system]
+requires=["hatchling"]
+build-backend="hatchling.build"

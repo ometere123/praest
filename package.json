@@ -1,0 +1,37 @@
+{
+  "name": "praest",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "npm@10.9.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev --parallel",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "doctor": "node scripts/doctor.mjs",
+    "verify:repo": "node scripts/verify-repo.mjs",
+    "seed:routes": "tsx scripts/seed-routes.ts",
+    "db:generate": "npm run db:generate -w @praest/database",
+    "db:migrate": "npm run db:migrate -w @praest/database",
+    "genlayer:deploy": "tsx scripts/deploy-genlayer.ts",
+    "evm:deploy": "tsx scripts/deploy-evm.ts",
+    "hyperlane:smoke": "tsx scripts/hyperlane-smoke.ts",
+    "zip": "node scripts/package.mjs",
+    "solana:deploy": "bash scripts/solana-deploy.sh",
+    "solana:init": "tsx scripts/solana-init.ts",
+    "verify:release": "node scripts/verify-repo.mjs && node scripts/doctor.mjs"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.9.0",
+    "tsx": "^4.20.0",
+    "vitest": "^3.2.0",
+    "@types/node": "^22.15.0",
+    "@openzeppelin/contracts": "^5.4.0"
+  }
+}

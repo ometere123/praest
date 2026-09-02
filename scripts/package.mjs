@@ -1,0 +1,1 @@
+import {execFileSync} from 'node:child_process';import {rmSync} from 'node:fs';const out='/mnt/data/PRAEST_FULL_PRODUCT.zip';try{rmSync(out)}catch{}execFileSync('zip',['-qr',out,'.','-x','node_modules/*','.git/*','.next/*','*/dist/*','**/__pycache__/*','*.env','*.env.local'],{stdio:'inherit'});console.log(out);

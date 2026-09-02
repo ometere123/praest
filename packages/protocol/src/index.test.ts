@@ -1,0 +1,4 @@
+import {describe,it,expect} from "vitest";
+import {deriveInstructionId,encodeInstruction,decodeInstruction,WIRE_VERSION} from "./index.js";
+const H=(c:string)=>`0x${c.repeat(64)}`;
+describe("PRAEST wire",()=>{it("round trips",()=>{const decisionHash=H("2");const instructionId=deriveInstructionId({decisionHash,destinationDomain:84532,settlementTarget:H("8"),nonce:1n});const x={payloadVersion:WIRE_VERSION as 1,instructionId,caseId:H("1"),agreementId:H("3"),decisionHash,policyVersion:1,evidenceManifestHash:H("4"),outcome:2,settlementType:1,settlementTarget:H("8"),escrowId:H("5"),asset:H("6"),assetDecimals:6,finalizedAt:10n,expiresAt:20n,sourceDomain:300,destinationDomain:84532,nonce:1n,allocations:[{beneficiary:H("7"),amount:1000n}]};expect(decodeInstruction(encodeInstruction(x))).toEqual(x);});});

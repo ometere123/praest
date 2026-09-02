@@ -1,0 +1,53 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22, cache: npm}
+      - run: npm install --no-audit --no-fund
+      - run: npm run verify:repo
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+  genlayer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m py_compile contracts/genlayer/*.py
+      - name: GenVM lint when available
+        run: |
+          python -m pip install genvm-linter || true
+          if command -v genvm-lint >/dev/null 2>&1; then genvm-lint check contracts/genlayer; else echo "genvm-lint CLI unavailable from package index"; fi
+  evm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --no-audit --no-fund
+      - uses: foundry-rs/foundry-toolchain@v1
+      - run: forge install foundry-rs/forge-std --no-commit
+        working-directory: contracts/evm
+      - run: forge build
+        working-directory: contracts/evm
+      - run: forge test -vvv
+        working-directory: contracts/evm
+  solana:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: {workspaces: contracts/solana}
+      - run: cargo check --manifest-path contracts/solana/Cargo.toml
+      - run: cargo test --manifest-path contracts/solana/Cargo.toml

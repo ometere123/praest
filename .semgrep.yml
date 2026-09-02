@@ -1,0 +1,14 @@
+rules:
+  - id: praest-no-permissive-ism
+    languages: [solidity]
+    message: Production ISM verification must not unconditionally return true
+    severity: ERROR
+    patterns:
+      - pattern: |
+          function verify(...) ... {
+            ...
+            return true;
+            ...
+          }
+    paths:
+      exclude: ["contracts/evm/test/**"]

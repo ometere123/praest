@@ -1,0 +1,20 @@
+# PRAEST Hyperlane relayer configuration.
+# The relayer is permissionless transport, not an adjudicator. The destination ISM and
+# PRAEST receiver still verify message authenticity, origin, sender and instruction state.
+chains:
+  - zksyncsepolia
+  - sepolia
+  - basesepolia
+  - arbitrumsepolia
+  - optimismsepolia
+  - polygonamoy
+  - scrollsepolia
+  - lineasepolia
+  - solanatestnet
+# Replace the placeholder with the deployed StudioDecisionGateway address.
+# Restricting the source reduces operational noise; it does NOT replace ISM security.
+whitelist:
+  zksyncsepolia:
+    - "${PRAEST_STUDIO_GATEWAY_ADDRESS}"
+retryTimeout: 3000
+cacheFile: /data/praest-hyperlane-relayer-cache.json

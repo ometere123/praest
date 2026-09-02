@@ -1,0 +1,5 @@
+{
+  "name":"@praest/relayer","version":"0.1.0","private":true,"type":"module",
+  "scripts":{"start":"hyperlane relayer --chains zksyncsepolia,sepolia,basesepolia,arbitrumsepolia,optimismsepolia,polygonamoy,scrollsepolia,lineasepolia,solanatestnet","typecheck":"node -e \"console.log('Hyperlane CLI/relayer package owns runtime typechecking')\"","build":"node -e \"console.log('no build step')\"","test":"node -e \"console.log('relayer smoke is npm run hyperlane:smoke')\"","lint":"node -e \"console.log('no local source')\""},
+  "dependencies":{"@hyperlane-xyz/cli":"42.0.0","@hyperlane-xyz/relayer":"2.0.0","@hyperlane-xyz/registry":"25.6.0"}
+}

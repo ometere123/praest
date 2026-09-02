@@ -1,0 +1,121 @@
+[
+  {
+    "key": "zksyncsepolia",
+    "displayName": "zkSync Sepolia",
+    "protocol": "ethereum",
+    "chainId": 300,
+    "domainId": 300,
+    "role": [
+      "transport-origin",
+      "settlement-destination"
+    ],
+    "mailbox": "0x1E45f767d51FA1Ec326d35e3BD4904fF0f30fCDa",
+    "rpcEnv": "ZKSYNC_SEPOLIA_RPC_URL",
+    "explorer": "https://sepolia.explorer.zksync.io"
+  },
+  {
+    "key": "sepolia",
+    "displayName": "Ethereum Sepolia",
+    "protocol": "ethereum",
+    "chainId": 11155111,
+    "domainId": 11155111,
+    "role": [
+      "settlement-destination"
+    ],
+    "mailbox": "0xfFAEF09B3cd11D9b20d1a19bECca54EEC2884766",
+    "rpcEnv": "SEPOLIA_RPC_URL",
+    "explorer": "https://sepolia.etherscan.io"
+  },
+  {
+    "key": "basesepolia",
+    "displayName": "Base Sepolia",
+    "protocol": "ethereum",
+    "chainId": 84532,
+    "domainId": 84532,
+    "role": [
+      "settlement-destination"
+    ],
+    "mailbox": "0x6966b0E55883d49BFB24539356a2f8A673E02039",
+    "rpcEnv": "BASE_SEPOLIA_RPC_URL",
+    "explorer": "https://sepolia.basescan.org"
+  },
+  {
+    "key": "arbitrumsepolia",
+    "displayName": "Arbitrum Sepolia",
+    "protocol": "ethereum",
+    "chainId": 421614,
+    "domainId": 421614,
+    "role": [
+      "settlement-destination"
+    ],
+    "mailbox": "0x598facE78a4302f11E3de0bee1894Da0b2Cb71F8",
+    "rpcEnv": "ARBITRUM_SEPOLIA_RPC_URL",
+    "explorer": "https://sepolia.arbiscan.io"
+  },
+  {
+    "key": "optimismsepolia",
+    "displayName": "OP Sepolia",
+    "protocol": "ethereum",
+    "chainId": 11155420,
+    "domainId": 11155420,
+    "role": [
+      "settlement-destination"
+    ],
+    "mailbox": "0x6966b0E55883d49BFB24539356a2f8A673E02039",
+    "rpcEnv": "OPTIMISM_SEPOLIA_RPC_URL",
+    "explorer": "https://sepolia-optimism.etherscan.io"
+  },
+  {
+    "key": "polygonamoy",
+    "displayName": "Polygon Amoy",
+    "protocol": "ethereum",
+    "chainId": 80002,
+    "domainId": 80002,
+    "role": [
+      "settlement-destination"
+    ],
+    "mailbox": "0x54148470292C24345fb828B003461a9444414517",
+    "rpcEnv": "POLYGON_AMOY_RPC_URL",
+    "explorer": "https://amoy.polygonscan.com"
+  },
+  {
+    "key": "scrollsepolia",
+    "displayName": "Scroll Sepolia",
+    "protocol": "ethereum",
+    "chainId": 534351,
+    "domainId": 534351,
+    "role": [
+      "settlement-destination"
+    ],
+    "mailbox": "0x3C5154a193D6e2955650f9305c8d80c18C814A68",
+    "rpcEnv": "SCROLL_SEPOLIA_RPC_URL",
+    "explorer": "https://sepolia.scrollscan.com"
+  },
+  {
+    "key": "lineasepolia",
+    "displayName": "Linea Sepolia",
+    "protocol": "ethereum",
+    "chainId": 59141,
+    "domainId": 59141,
+    "role": [
+      "settlement-destination"
+    ],
+    "mailbox": "0x7323E06E40B0Fb82Dc26D309AaF14e49D266A6a7",
+    "rpcEnv": "LINEA_SEPOLIA_RPC_URL",
+    "explorer": "https://sepolia.lineascan.build"
+  },
+  {
+    "key": "solanatestnet",
+    "displayName": "Solana Testnet",
+    "protocol": "sealevel",
+    "chainId": 1399811150,
+    "domainId": 1399811150,
+    "role": [
+      "settlement-destination"
+    ],
+    "mailbox": "75HBBLae3ddeneJVrZeyrDfv6vb7SMC3aCpBucSXS5aR",
+    "ism": "4GHxwWyKB9exhKG4fdyU2hfLgfFzhHp2WcsSKc2uNR1k",
+    "rpcEnv": "SOLANA_TESTNET_RPC_URL",
+    "explorer": "https://explorer.solana.com/?cluster=testnet"
+  }
+]

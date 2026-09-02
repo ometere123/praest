@@ -1,0 +1,1 @@
+export default function NotFound(){return <main className="hero"><div className="hero-inner"><div className="eyebrow">404</div><h1>Route not found.</h1><p>This URL is not part of the frozen PRAEST product surface.</p></div></main>}

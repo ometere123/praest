@@ -1,0 +1,17 @@
+[package]
+name = "praest-settlement-solana"
+version = "0.1.0"
+edition = "2021"
+[lib]
+crate-type = ["cdylib","lib"]
+[features]
+no-entrypoint = []
+[dependencies]
+borsh = { version = "1.5", features = ["derive"] }
+solana-program = "=3.0.0"
+solana-system-interface = { version = "=2.0.0", features = ["bincode"] }
+spl-associated-token-account = { version = "8.0", features = ["no-entrypoint"] }
+spl-token = { version = "9.0", features = ["no-entrypoint"] }
+hyperlane-sealevel-mailbox = { git = "https://github.com/hyperlane-xyz/hyperlane-monorepo", rev = "c5bf59d329a09b6abf6c0d58ef0d486ca4a8ac6e", package = "hyperlane-sealevel-mailbox", features=["no-entrypoint"] }
+hyperlane-sealevel-message-recipient-interface = { git = "https://github.com/hyperlane-xyz/hyperlane-monorepo", rev = "c5bf59d329a09b6abf6c0d58ef0d486ca4a8ac6e", package = "hyperlane-sealevel-message-recipient-interface" }
+serializable-account-meta = { git = "https://github.com/hyperlane-xyz/hyperlane-monorepo", rev = "c5bf59d329a09b6abf6c0d58ef0d486ca4a8ac6e", package = "serializable-account-meta" }

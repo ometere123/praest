@@ -1,0 +1,1 @@
+Read AGENTS.md first. Then read docs/ARCHITECTURE.md, docs/IMPLEMENTATION_STATUS.md and HANDOFF.md. Do not redesign frozen architecture unless a verified external technical blocker exists. Preserve real failure states. Never substitute mocks for live acceptance proof.
