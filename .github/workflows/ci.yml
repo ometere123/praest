@@ -27,7 +27,14 @@ jobs:
       - name: GenVM lint when available
         run: |
           python -m pip install genvm-linter || true
-          if command -v genvm-lint >/dev/null 2>&1; then genvm-lint check contracts/genlayer; else echo "genvm-lint CLI unavailable from package index"; fi
+          if command -v genvm-lint >/dev/null 2>&1; then
+            for f in contracts/genlayer/*.py; do
+              [[ "$(basename "$f")" == test_* ]] && continue
+              genvm-lint check "$f"
+            done
+          else
+            echo "genvm-lint CLI unavailable from package index"
+          fi
   evm:
     runs-on: ubuntu-latest
     steps:

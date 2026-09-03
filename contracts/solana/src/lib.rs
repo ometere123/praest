@@ -264,7 +264,7 @@ fn handle(program_id: &Pubkey, accounts: &[AccountInfo], h: HandleInstruction) -
     let vault = next_account_info(it)?;
     let c: Config = read(cfg_info)?;
     let (cfg, _) = config_pda(program_id);
-    if cfg_info.key != &cfg || c.paused || h.origin != c.trusted_origin || h.sender != c.trusted_sender { return Err(ProgramError::InvalidArgument); }
+    if cfg_info.key != &cfg || c.paused || h.origin != c.trusted_origin || h.sender.0 != c.trusted_sender { return Err(ProgramError::InvalidArgument); }
     let (expected_authority, _) = Pubkey::find_program_address(mailbox_process_authority_pda_seeds!(program_id), &c.mailbox);
     if authority.key != &expected_authority || !authority.is_signer { return Err(ProgramError::MissingRequiredSignature); }
 
