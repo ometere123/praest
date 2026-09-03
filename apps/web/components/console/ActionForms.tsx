@@ -12,6 +12,49 @@ function Result({ msg, ok }: { msg: string; ok: boolean }) {
   return ok ? <SuccessBanner message={msg} /> : <ErrorBanner message={msg} />;
 }
 
+/** Stripe Checkout/Billing Portal are hosted, redirect-based flows: on success we navigate to the session URL rather than showing an inline message. */
+export function BillingActions() {
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState<string>("");
+
+  async function go(key: string, action: "checkout" | "portal", body: any = {}) {
+    setBusy(key);
+    setMsg("");
+    try {
+      const out = await api<{ url?: string }>(`billing/${action}`, { method: "POST", body: JSON.stringify(body) });
+      if (!out?.url) throw new Error("Stripe did not return a redirect URL");
+      window.location.href = out.url;
+    } catch (e: any) {
+      setMsg(e.message);
+      setBusy("");
+    }
+  }
+
+  return (
+    <Card title="Subscription">
+      <p className="muted" style={{ marginBottom: 14, fontSize: 13.5, lineHeight: 1.55 }}>
+        Subscribing or managing billing redirects to Stripe's hosted pages (Checkout / Billing Portal); PRAEST never handles card details directly.
+      </p>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <button className="btn primary" disabled={!!busy} onClick={() => go("starter", "checkout", { plan: "starter" })}>
+          {busy === "starter" ? "Redirecting…" : "Subscribe — Starter"}
+        </button>
+        <button className="btn primary" disabled={!!busy} onClick={() => go("pro", "checkout", { plan: "pro" })}>
+          {busy === "pro" ? "Redirecting…" : "Subscribe — Pro"}
+        </button>
+        <button className="btn" disabled={!!busy} onClick={() => go("portal", "portal")}>
+          {busy === "portal" ? "Redirecting…" : "Manage billing"}
+        </button>
+      </div>
+      {msg && (
+        <div style={{ marginTop: 12 }}>
+          <ErrorBanner message={msg} />
+        </div>
+      )}
+    </Card>
+  );
+}
+
 export function DirectAction({ title, endpoint, body = {} }: { title: string; endpoint: string; body?: any }) {
   const [msg, setMsg] = useState("");
   const [ok, setOk] = useState(true);
@@ -159,6 +202,7 @@ export function ActionPanel({ path, endpoint }: { path: string; endpoint?: strin
     </div>
   );
 
+  if (path === "/app/billing") return <BillingActions />;
   if (path.startsWith("/app/cases/") && dynId) return <DirectAction title="Submit to GenLayer" endpoint={`cases/${dynId}/adjudicate`} />;
   if (path.startsWith("/app/adjudications/") && dynId)
     return (
