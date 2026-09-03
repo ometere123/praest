@@ -23,7 +23,7 @@
     "@praest/protocol": "0.1.0",
     "@praest/schemas": "0.1.0",
     "@praest/config": "0.1.0",
-    "drizzle-orm": "^0.44.0",
+    "drizzle-orm": "^0.45.2",
     "pg": "^8.16.0",
     "zod": "^4.0.0",
     "jose": "^6.0.0",
