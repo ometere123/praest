@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-02T17:43:49.995Z",
+  "generatedAt": "2026-09-03T01:28:53.647Z",
   "passes": [
     "present README.md",
     "present docs/ARCHITECTURE.md",
@@ -24,14 +24,13 @@
     "valid JSON packages/config/src/chains.json",
     "route manifest 165 URLs",
     "GenLayer Python syntax",
-    "TypeScript/TSX parser syntax"
+    "TypeScript/TSX parser syntax",
+    "dependency-resolved TypeScript typecheck",
+    "Foundry tests"
   ],
-  "warnings": [
-    "Foundry tests not executed: forge unavailable",
-    "Solana cargo check not executed: cargo unavailable"
-  ],
+  "warnings": [],
   "failures": [
-    "TypeScript typecheck failed"
+    "Solana cargo check failed"
   ],
   "routeCounts": {
     "product": 75,
@@ -40,5 +39,5 @@
     "explorer": 12
   },
   "totalRoutes": 165,
-  "fileCount": 166
+  "fileCount": 338
 }
