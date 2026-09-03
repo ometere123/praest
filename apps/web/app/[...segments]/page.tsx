@@ -7,6 +7,10 @@ import { PublicPage } from "@/components/marketing/PublicPage";
 
 const publicPaths = new Set(["/about", "/how-it-works", "/pricing", "/developers", "/docs", "/security", "/status"]);
 const known = new Set(Object.values(routes as any).flat());
+// routes.json is a frozen, developer-controlled config (not user input), and each
+// pattern is bounded (no nested quantifiers), so this is not attacker-reachable ReDoS.
+// nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
+const routeMatchers = [...known].map((r: any) => new RegExp("^" + String(r).replace(/\[[^\]]+\]/g, "[^/]+") + "$"));
 
 export default async function Page({ params }: { params: Promise<{ segments?: string[] }> }) {
   const { segments = [] } = await params;
@@ -22,10 +26,7 @@ export default async function Page({ params }: { params: Promise<{ segments?: st
 
   await withAuth({ ensureSignedIn: true });
 
-  const match = [...known].some((r: any) => {
-    const pattern = "^" + String(r).replace(/\[[^\]]+\]/g, "[^/]+") + "$";
-    return new RegExp(pattern).test(path);
-  });
+  const match = routeMatchers.some((re) => re.test(path));
   if (!match && !path.startsWith("/app") && !path.startsWith("/control") && !path.startsWith("/developer") && !path.startsWith("/explorer")) notFound();
 
   return <ConsoleRouter path={path} />;
