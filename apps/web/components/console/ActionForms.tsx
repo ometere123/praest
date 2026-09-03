@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { resourceKey } from "@/lib/route-meta";
 import { Card } from "@/components/ui/Card";
@@ -16,6 +16,13 @@ function Result({ msg, ok }: { msg: string; ok: boolean }) {
 export function BillingActions() {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState<string>("");
+  const [enabled, setEnabled] = useState<boolean | null>(null); // null = still checking
+
+  useEffect(() => {
+    api<{ enabled: boolean }>("billing/config")
+      .then((c) => setEnabled(!!c?.enabled))
+      .catch(() => setEnabled(false)); // fail closed: no broken Subscribe/Manage buttons if the check itself fails
+  }, []);
 
   async function go(key: string, action: "checkout" | "portal", body: any = {}) {
     setBusy(key);
@@ -29,6 +36,16 @@ export function BillingActions() {
       setBusy("");
     }
   }
+
+  if (enabled === null) return null; // avoid a flash of buttons that would immediately 403
+  if (!enabled)
+    return (
+      <Card title="Subscription">
+        <p className="muted" style={{ fontSize: 13.5, lineHeight: 1.55 }}>
+          PRAEST is free to use during this phase — no subscription required. Paid plans aren't enabled yet.
+        </p>
+      </Card>
+    );
 
   return (
     <Card title="Subscription">

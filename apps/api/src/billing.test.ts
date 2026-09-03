@@ -1,11 +1,14 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import Stripe from "stripe";
-import { BillingService } from "./billing.js";
+import { BillingDisabledError, BillingService, stripeEnabled } from "./billing.js";
 
 process.env.STRIPE_SECRET_KEY = "sk_test_fake_for_unit_tests";
 process.env.STRIPE_WEBHOOK_SECRET = "whsec_test_fake_secret";
 process.env.STRIPE_PRICE_STARTER = "price_starter_test";
 process.env.STRIPE_PRICE_PRO = "price_pro_test";
+// The rest of this file exercises Stripe *enabled* (regression coverage per TEST C); the dedicated
+// "Stripe disabled" describe block below flips this off for its own tests and restores it after.
+process.env.STRIPE_ENABLED = "true";
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -145,5 +148,51 @@ describe("events outside customer.subscription.* are accepted but not processed"
     const result = await svc.webhook(Buffer.from(payload), signature);
     expect(result).toEqual({ received: true, type: "invoice.paid" });
     expect(dbh.accountUpdates).toHaveLength(0);
+  });
+});
+
+describe("Stripe disabled (STRIPE_ENABLED != \"true\") - TEST B", () => {
+  const savedFlag = process.env.STRIPE_ENABLED;
+  const savedKeys = {
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    STRIPE_PRICE_STARTER: process.env.STRIPE_PRICE_STARTER,
+    STRIPE_PRICE_PRO: process.env.STRIPE_PRICE_PRO,
+    STRIPE_METER_EVENT_NAME: process.env.STRIPE_METER_EVENT_NAME,
+  };
+
+  beforeEach(() => {
+    process.env.STRIPE_ENABLED = "false";
+    // Boot without any Stripe credentials at all - none of this should be needed while disabled.
+    delete process.env.STRIPE_SECRET_KEY;
+    delete process.env.STRIPE_WEBHOOK_SECRET;
+    delete process.env.STRIPE_PRICE_STARTER;
+    delete process.env.STRIPE_PRICE_PRO;
+    delete process.env.STRIPE_METER_EVENT_NAME;
+  });
+  afterEach(() => {
+    process.env.STRIPE_ENABLED = savedFlag;
+    Object.assign(process.env, savedKeys);
+  });
+
+  it("reports disabled without requiring any Stripe credentials", () => {
+    expect(stripeEnabled()).toBe(false);
+  });
+
+  it("checkout() fails cleanly with BillingDisabledError, never constructing a Stripe client", async () => {
+    await expect(svc.checkout("org_1", "a@example.com", "starter")).rejects.toBeInstanceOf(BillingDisabledError);
+  });
+
+  it("portal() fails cleanly with BillingDisabledError", async () => {
+    await expect(svc.portal("org_1")).rejects.toBeInstanceOf(BillingDisabledError);
+  });
+
+  it("usage() fails cleanly with BillingDisabledError before touching the meter API", async () => {
+    await expect(svc.usage("org_1", "job.run", 1n, "idem-1")).rejects.toBeInstanceOf(BillingDisabledError);
+  });
+
+  it("webhook() short-circuits without requiring STRIPE_WEBHOOK_SECRET or verifying a signature", async () => {
+    const result = await svc.webhook(Buffer.from("{}"), "not-a-real-signature");
+    expect(result).toEqual({ received: false, reason: "stripe_disabled" });
   });
 });
