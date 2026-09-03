@@ -21,7 +21,7 @@ This session (2026-09-02/03) did what the previous assembly environment explicit
 | Temporal workflows | IMPLEMENTED | DEPENDENCY-RESOLVED VERIFIED (typecheck + build). Real bug fixed: `@temporalio/worker` has no `Connection` export — the worker-side connection type is `NativeConnection`. Live Temporal Cloud proof still required |
 | ClickHouse measurements | IMPLEMENTED | init/live ingestion proof required |
 | R2 evidence storage | IMPLEMENTED | LIVE PROOF REQUIRED |
-| AWS regional probe | IMPLEMENTED | typecheck/build pass; Terraform hardened this session (KMS-encrypted Lambda env vars, active X-Ray tracing); live regions proof required |
+| Regional probes (Globalping default, `native` provider available, AWS Lambda retired) | IMPLEMENTED | typecheck/build/test pass; live Globalping measurement proof required |
 | monitoring DNS/TCP/TLS/TTFB/assertions/SSRF controls | IMPLEMENTED | DEPENDENCY-RESOLVED VERIFIED; live network matrix required |
 | evidence bundles/provenance/hashes | IMPLEMENTED | local/API proof required |
 | TLSNotary integration | IMPLEMENTED adapter | verifier/provider LIVE PROOF REQUIRED |

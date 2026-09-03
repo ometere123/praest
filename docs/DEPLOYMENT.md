@@ -92,7 +92,11 @@ For each destination, collect a proof bundle containing:
 
 ## 8. Multi-region probes
 
-Build `apps/probe`, upload the artifact to S3 and apply `infrastructure/terraform/probes`. The Terraform module deploys regional Lambdas and EventBridge schedules. Configure the shared internal token and restrict IAM.
+Default provider is Globalping (`PROBE_PROVIDER=globalping`), which needs no AWS account: build `apps/probe` and run it (`npm run start -w @praest/probe`, or `node dist/index.js`) on any schedule - Railway's Cron Job feature, plain OS cron, or a small always-on service that loops. It fans out across `GLOBALPING_PROBE_LOCATIONS` itself in one process; no per-region deployment is needed. Set `PRAEST_API_URL`/`PRAEST_INTERNAL_TOKEN` and, optionally, `GLOBALPING_API_TOKEN` for a higher rate-limit allowance.
+
+Alternative: `PROBE_PROVIDER=native` runs the original direct DNS/TCP/TLS/HTTP prober in-process (same command), still without AWS - useful if Globalping is unreachable from your network or you want a single self-hosted vantage point instead of Globalping's network.
+
+The AWS Lambda + EventBridge regional deployment (`infrastructure/terraform/probes`) has been retired along with the Lambda-shaped entrypoint it invoked - `apps/probe` no longer exports an AWS Lambda `handler`, since the coordinator now fans out across all configured locations itself in a single run rather than one region per Lambda deployment. It remains available in git history if AWS deployment is ever wanted again; re-adding it would mean a new thin Lambda entrypoint calling the same `runOnce()`/provider code, not a rewrite.
 
 ## 9. Railway/Vercel
 

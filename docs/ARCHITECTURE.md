@@ -121,7 +121,7 @@ The Sealevel recipient verifies Hyperlane process authority, trusted route, targ
 
 ## Monitoring and evidence
 
-AWS Lambda probes are scheduled independently by region. The probe engine measures DNS, TCP, TLS, TTFB and total latency, validates HTTPS targets and assertions, caps response bodies and prevents private/metadata-network SSRF including DNS rebinding by pinning the vetted IP while preserving TLS hostname validation.
+Regional probes (`apps/probe`) run independently per configured location behind a swappable `PROBE_PROVIDER` (default `globalping`, using the Globalping network; `native` runs the original direct-from-collector prober). The probe engine measures DNS, TCP, TLS, TTFB and total latency, validates HTTPS targets and assertions, caps response bodies and prevents private/metadata-network SSRF including DNS rebinding by pinning the vetted IP while preserving TLS hostname validation.
 
 Collector errors do not become service failures. Evidence metadata and immutable hashes live in Postgres; evidence bodies/proofs live in R2. Public source URLs may be included in evidence manifests so GenLayer validators can independently re-fetch them.
 

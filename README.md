@@ -108,7 +108,6 @@ packages/
   cli/
   mcp/
 infrastructure/
-  terraform/probes/
   hyperlane/
   clickhouse/
 ```
