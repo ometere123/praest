@@ -283,9 +283,15 @@ export class LifecycleService {
     if (adj.appealDeadline && adj.appealDeadline > new Date()) throw new Error("appeal window still open");
 
     const gl = new StudioNetAdapter();
-    const tx = await gl.transaction(adj.genlayerTxHash);
-    const txStatus = String(tx.statusName || "").toUpperCase();
-    if (txStatus === "READY_TO_FINALIZE") await gl.finalize(adj.genlayerTxHash);
+    // GenLayer's protocol has no "READY_TO_FINALIZE" transaction status - gating finalize() on one
+    // meant it was never actually called. finalize() is the correct action once our own appeal
+    // deadline has passed (checked above); tolerate it erroring if the network has already
+    // auto-progressed the transaction past a finalizable state, then always wait for FINALIZED.
+    try {
+      await gl.finalize(adj.genlayerTxHash);
+    } catch {
+      // already finalized / not currently finalizable - waitFinalized below is authoritative
+    }
     const finalReceipt = await gl.waitFinalized(adj.genlayerTxHash);
     if (String(finalReceipt.statusName || "").toUpperCase() !== "FINALIZED") throw new Error("GenLayer transaction is not finalized");
 

@@ -16,6 +16,6 @@ export class StudioNetAdapter{
  async transaction(hash:string){return this.client.getTransaction({hash:hash as `0x${string}`})}
 }
 export const resolverAddress=(caseType:string)=>{
- const map:Record<string,string|undefined>={sla:process.env.GENLAYER_SERVICE_ASSURANCE_RESOLVER_ADDRESS,service:process.env.GENLAYER_SERVICE_ASSURANCE_RESOLVER_ADDRESS,x402:process.env.GENLAYER_SERVICE_ASSURANCE_RESOLVER_ADDRESS,agent:process.env.GENLAYER_AGENT_AGREEMENT_RESOLVER_ADDRESS,event:process.env.GENLAYER_EVENT_RESOLVER_ADDRESS,escrow:process.env.GENLAYER_DISPUTE_RESOLVER_ADDRESS,dispute:process.env.GENLAYER_DISPUTE_RESOLVER_ADDRESS};
+ const map:Record<string,string|undefined>={sla:process.env.GENLAYER_SERVICE_ASSURANCE_RESOLVER_ADDRESS,service:process.env.GENLAYER_SERVICE_ASSURANCE_RESOLVER_ADDRESS,x402:process.env.GENLAYER_SERVICE_ASSURANCE_RESOLVER_ADDRESS,agent:process.env.GENLAYER_AGENT_AGREEMENT_RESOLVER_ADDRESS,event:process.env.GENLAYER_EVENT_RESOLVER_ADDRESS,escrow:process.env.GENLAYER_DISPUTE_RESOLVER_ADDRESS,dispute:process.env.GENLAYER_DISPUTE_RESOLVER_ADDRESS,liability:process.env.GENLAYER_LIABILITY_RESOLVER_ADDRESS};
  const a=map[caseType]||process.env.GENLAYER_DISPUTE_RESOLVER_ADDRESS;if(!a)throw new Error(`GenLayer resolver not configured for ${caseType}`);return a;
 };
