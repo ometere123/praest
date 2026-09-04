@@ -10,6 +10,7 @@ import {hasPermission} from "./request-context.js";
 import {addressToBytes32, idToBytes32} from "./address.js";
 import {randomBytes, createHash, randomUUID} from "node:crypto";
 import {createPublicClient, encodeFunctionData, http, parseAbi} from "viem";
+import {StudioNetAdapter} from "./genlayer.js";
 import {PublicKey, SystemProgram} from "@solana/web3.js";
 import {ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 
@@ -72,6 +73,16 @@ export class DomainService {
     const ps=await this.db.select().from(agreementParties).where(and(eq(agreementParties.agreementId,id),eq(agreementParties.organizationId,org)));
     if(ps.length<2)throw new Error("at least two agreement parties required");
     if(ps.some((p:any)=>p.acceptedVersion!==a.currentVersion))throw new Error("all parties must accept current agreement version");
+    const [ver]=await this.db.select().from(agreementVersions).where(and(eq(agreementVersions.agreementId,id),eq(agreementVersions.version,a.currentVersion))).limit(1);
+    if(!ver)throw new Error("current agreement version not found");
+    // Commit the accepted terms hash to GenLayer AgreementRegistry BEFORE the agreement goes active,
+    // so adjudication can later verify the terms it is judging haven't been silently swapped by a
+    // compromised PRAEST database/operator (see LifecycleService.adjudicate).
+    const registry=process.env.GENLAYER_AGREEMENT_REGISTRY_ADDRESS;
+    if(!registry)throw new Error("GENLAYER_AGREEMENT_REGISTRY_ADDRESS required to activate an agreement");
+    const gl=new StudioNetAdapter();
+    try{await gl.write(registry,"register",[id,a.currentVersion,ver.termsHash,ver.policyVersion])}
+    catch{await gl.write(registry,"update_version",[id,a.currentVersion,ver.termsHash,ver.policyVersion])}
     const [v]=await this.db.update(agreements).set({status:"active",updatedAt:new Date()}).where(eq(agreements.id,id)).returning();return v;
   }
 

@@ -111,6 +111,18 @@ export class LifecycleService {
       .limit(1);
     if (!version) throw new Error("active agreement version not found");
 
+    // Verify the terms we are about to submit for adjudication match what was committed to
+    // GenLayer AgreementRegistry at activation time (DomainService.activate). A compromised PRAEST
+    // database/operator can no longer silently swap the terms a resolver judges without detection.
+    const registryAddress = process.env.GENLAYER_AGREEMENT_REGISTRY_ADDRESS;
+    if (!registryAddress) throw new Error("GENLAYER_AGREEMENT_REGISTRY_ADDRESS required for adjudication");
+    const registryGl = new StudioNetAdapter();
+    const stored = String(await registryGl.read(registryAddress, "get_agreement", [agreement.id], true) || "");
+    const expected = `${agreement.currentVersion}|${version.termsHash}|${version.policyVersion}|active`;
+    if (stored !== expected) {
+      throw new Error("agreement terms do not match the commitment registered on GenLayer AgreementRegistry - refusing to adjudicate against unverified terms");
+    }
+
     let bundle: any = null;
     if (c.evidenceBundleId) {
       [bundle] = await this.db
