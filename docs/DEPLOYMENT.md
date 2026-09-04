@@ -22,7 +22,7 @@ Fill every required secret in `.env.local`; never commit it.
 3. Configure Upstash Redis.
 4. Configure ClickHouse and execute `infrastructure/clickhouse/init.sql`.
 5. Configure R2 bucket/credentials and evidence retention.
-6. Configure Temporal Cloud namespace/API key.
+6. Configure Temporal - self-hosted is the default/preferred path (`TEMPORAL_ADDRESS`/`TEMPORAL_NAMESPACE`/`TEMPORAL_TASK_QUEUE`, no TLS/API key required); Temporal Cloud (`TEMPORAL_API_KEY`, auto-enables TLS) remains available as an alternative, not required. A Railway project (`praest`, `railway.com/project/72ef4f3d-2a24-4c51-872a-57959cffc0bd`) was created 2026-09-04 with `temporal-postgres` (healthy) and `temporal-server` (`temporalio/auto-setup:1.24.2`) services; the server currently OOMs on startup at the service's default memory allocation - increase its memory limit (Railway dashboard → Settings → Resources) before relying on it.
 7. Run `npm run seed:routes` after contract deployments; route metadata can be reseeded safely.
 
 ## 3. Identity and wallets
@@ -43,7 +43,7 @@ Fund a dedicated StudioNet submitter, set `GENLAYER_STUDIONET_PRIVATE_KEY` and r
 npm run genlayer:deploy
 ```
 
-The script deploys all Intelligent Contracts and writes `deployments/studionet.json`. Populate the resulting addresses into the runtime environment. Do not proceed to cross-chain settlement until actual StudioNet adjudication reaches `FINALIZED` and `DecisionOutbox` can be read reproducibly.
+The script deploys all Intelligent Contracts and writes `deployments/studionet.json`. **All 9 contracts were deployed 2026-09-04** (tx hashes recorded); if the receipt's contract address isn't captured at deploy time, run `npx tsx scripts/resolve-genlayer-addresses.ts` afterward to backfill it from each tx hash's `txDataDecoded.contractAddress` (the original deploy script's fallback field list never checked that field). Populate the resulting addresses into the runtime environment - `AgreementRegistry`, `EvidenceAssessor`, `SettlementEntitlement`, and `LiabilityResolver` are now actually read by application code (agreement activation/adjudication/finalization/resolver routing), not just deployed placeholders. Do not proceed to cross-chain settlement until actual StudioNet adjudication reaches `FINALIZED` and `DecisionOutbox` can be read reproducibly.
 
 ## 5. EVM destination contracts
 
@@ -111,7 +111,7 @@ Deploy `apps/web` to Vercel. Set `PRAEST_API_URL` server-side in the web project
 
 ## 10. Commercial/integration providers
 
-Configure Stripe test products/prices/meter event, signed webhook endpoint, Resend verified sender, Sentry/OTel, x402 facilitator, TLSNotary verifier and Internet Court adapter credentials where available.
+Stripe is optional (`STRIPE_ENABLED=false` by default - humans use PRAEST free without it); if enabling it, configure test products/prices/meter event and a signed webhook endpoint. Configure a Brevo verified sender (`BREVO_FROM_EMAIL`, once verified in the Brevo dashboard - do not fabricate this value), Sentry/OTel, the x402 facilitator, a TLSNotary verifier (not yet built - see `docs/IMPLEMENTATION_STATUS.md`) and Internet Court adapter credentials where available.
 
 ## 11. Release acceptance
 
