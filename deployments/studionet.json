@@ -1,7 +1,7 @@
 {
   "network": "studionet",
   "rpc": "https://studio.genlayer.com/api",
-  "deployedAt": "2026-09-03T23:43:25.203Z",
+  "deployedAt": "2026-09-04T08:08:08.468Z",
   "contracts": {
     "AgreementRegistry": {
       "txHash": "0x2552c7d3f734f90260e0c43f69fdf753184df3119dfb744e46cbd01d25489868",
@@ -28,8 +28,8 @@
       "address": "0x719bBaB8aDF0041F7454FF75d0325e3391c54bb3"
     },
     "LiabilityResolver": {
-      "txHash": "0x16127b6653bd1c86dec27120d2b6fc8a2c410c94276fa6c9c04759bfc00b924d",
-      "address": "0xA6113751cF79c7e9659Dde1c31Ff7Fd2983906FB"
+      "txHash": "0xfb3afdf49ff52ae65ccf33bbd0caaa8c10edc666e4abf7409c5dfd046cce6c5d",
+      "address": "0x9Ca068655C02B89F2Ab2035D43D2a906B1a186FC"
     },
     "EventResolver": {
       "txHash": "0x01491168c65424bc1cd9ca24408b4da199a6b23b1874896eb993fbcbde3a696d",

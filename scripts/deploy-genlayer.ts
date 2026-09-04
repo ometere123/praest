@@ -1,7 +1,20 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';import path from 'node:path';import {existsSync} from 'node:fs';import {config as loadEnv} from 'dotenv';import {createAccount,createClient} from 'genlayer-js';import {studionet} from 'genlayer-js/chains';
 if(existsSync('.env.local'))loadEnv({path:'.env.local'});else if(existsSync('.env'))loadEnv();
+const ALL_NAMES=['AgreementRegistry','EvidenceAssessor','ServiceAssuranceResolver','DisputeResolver','SettlementEntitlement','AgentAgreementResolver','LiabilityResolver','EventResolver','DecisionOutbox'];
 async function main(){
-const pk=process.env.GENLAYER_STUDIONET_PRIVATE_KEY as `0x${string}`|undefined;if(!pk)throw new Error('GENLAYER_STUDIONET_PRIVATE_KEY required');const account=createAccount(pk);const client=createClient({chain:studionet,account} as any);const names=['AgreementRegistry','EvidenceAssessor','ServiceAssuranceResolver','DisputeResolver','SettlementEntitlement','AgentAgreementResolver','LiabilityResolver','EventResolver','DecisionOutbox'];const deployment:any={network:'studionet',rpc:'https://studio.genlayer.com/api',deployedAt:new Date().toISOString(),contracts:{}};
-for(const name of names){const code=await readFile(path.join('contracts/genlayer',`${name}.py`),'utf8');console.log(`deploying ${name}...`);const tx=await (client as any).deployContract({account,code,args:[]});const receipt:any=await (client as any).waitForTransactionReceipt({hash:tx,waitUntil:'finalized',fullTransaction:true});const address=receipt?.contractAddress||receipt?.data?.contractAddress||receipt?.decodedData?.contractAddress||receipt?.data?.decodedData?.contractAddress||receipt?.consensus_data?.contract_address;if(!address)console.warn(`${name}: deployed tx ${tx}; address was not exposed in the known receipt fields. Record it from Studio and update deployments/studionet.json.`);deployment.contracts[name]={txHash:tx,address:address||null};}await mkdir('deployments',{recursive:true});await writeFile('deployments/studionet.json',JSON.stringify(deployment,null,2));console.log('wrote deployments/studionet.json');
+// Optional: pass one or more contract names as CLI args to redeploy only those (e.g. after a
+// source-only fix to a single contract) instead of churning all 9 and orphaning the other
+// addresses already in .env.local. Merges into the existing deployments/studionet.json rather
+// than overwriting it.
+const requested=process.argv.slice(2).filter(a=>!a.startsWith('-'));
+const names=requested.length?requested:ALL_NAMES;
+for(const n of names)if(!ALL_NAMES.includes(n))throw new Error(`unknown contract: ${n}`);
+const pk=process.env.GENLAYER_STUDIONET_PRIVATE_KEY as `0x${string}`|undefined;if(!pk)throw new Error('GENLAYER_STUDIONET_PRIVATE_KEY required');const account=createAccount(pk);const client=createClient({chain:studionet,account} as any);
+const outPath='deployments/studionet.json';
+let deployment:any={network:'studionet',rpc:'https://studio.genlayer.com/api',deployedAt:new Date().toISOString(),contracts:{}};
+if(existsSync(outPath)){try{const existing=JSON.parse(await readFile(outPath,'utf8'));deployment.contracts=existing.contracts||{};}catch{}}
+for(const name of names){const code=await readFile(path.join('contracts/genlayer',`${name}.py`),'utf8');console.log(`deploying ${name}...`);const tx=await (client as any).deployContract({account,code,args:[]});const receipt:any=await (client as any).waitForTransactionReceipt({hash:tx,waitUntil:'finalized',fullTransaction:true});const address=receipt?.contractAddress||receipt?.data?.contractAddress||receipt?.decodedData?.contractAddress||receipt?.data?.decodedData?.contractAddress||receipt?.consensus_data?.contract_address||receipt?.txDataDecoded?.contractAddress;if(!address)console.warn(`${name}: deployed tx ${tx}; address was not exposed in the known receipt fields. Run scripts/resolve-genlayer-addresses.ts afterward.`);deployment.contracts[name]={txHash:tx,address:address||null};}
+deployment.deployedAt=new Date().toISOString();
+await mkdir('deployments',{recursive:true});await writeFile(outPath,JSON.stringify(deployment,null,2));console.log(`wrote ${outPath} (${names.join(', ')})`);
 }
 main().catch(err=>{console.error(err);process.exit(1)});
