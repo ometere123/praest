@@ -14,6 +14,11 @@ contract PraestEscrow is AccessControl, Pausable, ReentrancyGuard {
 
     bytes32 public constant SETTLER_ROLE = keccak256("SETTLER_ROLE");
 
+    /// @dev Payer self-refund is only available once this window has passed with nothing settled -
+    /// closes the gap where a payer could withdraw funding mid-agreement/mid-dispute, before
+    /// adjudication had a chance to run, defeating the escrow's assurance purpose.
+    uint64 public constant DEFAULT_REFUND_LOCK_SECONDS = 7 days;
+
     struct Escrow {
         bytes32 agreementId;
         address token;
@@ -23,6 +28,7 @@ contract PraestEscrow is AccessControl, Pausable, ReentrancyGuard {
         uint16 maxCustomerRemedyBps;
         uint256 deposited;
         uint256 remaining;
+        uint64 lockUntil;
         bool exists;
     }
 
@@ -86,6 +92,7 @@ contract PraestEscrow is AccessControl, Pausable, ReentrancyGuard {
             e.provider = provider;
             e.customer = customer;
             e.maxCustomerRemedyBps = maxCustomerRemedyBps;
+            e.lockUntil = uint64(block.timestamp) + DEFAULT_REFUND_LOCK_SECONDS;
             e.exists = true;
         } else {
             if (e.remaining != e.deposited) revert AlreadyUsed();
@@ -135,13 +142,32 @@ contract PraestEscrow is AccessControl, Pausable, ReentrancyGuard {
         emit EscrowSettled(escrowId, instructionId, total, e.remaining);
     }
 
-    /// @notice Payer recovery is only possible before any settlement consumed escrow value.
+    /// @notice Payer recovery is only possible before any settlement consumed escrow value, AND only
+    /// once the lock window has passed - a payer cannot unilaterally withdraw funding while an
+    /// agreement is still active or a dispute could still be open. Legitimate early
+    /// cancellation/refund (agreement canceled before activation, or a finalized decision awarding a
+    /// full refund before the lock expires) goes through settlerRefund, gated the same way as
+    /// execute().
     function refundUnused(bytes32 escrowId) external nonReentrant whenNotPaused {
         Escrow storage e = escrows[escrowId];
         if (!e.exists) revert UnknownEscrow();
         if (msg.sender != e.payer) revert InvalidAllocation();
         if (e.remaining != e.deposited) revert AlreadyUsed();
+        if (block.timestamp < e.lockUntil) revert PolicyMismatch();
         uint256 amount = e.remaining;
+        e.remaining = 0;
+        IERC20(e.token).safeTransfer(e.payer, amount);
+        emit EscrowRefunded(escrowId, e.payer, amount);
+    }
+
+    /// @notice Authorized early refund path (agreement canceled before activation, or a finalized
+    /// GenLayer decision awarding a full refund) - bypasses the payer-side time lock, but only for
+    /// the same trusted settler role that executes normal settlement instructions.
+    function settlerRefund(bytes32 escrowId) external onlyRole(SETTLER_ROLE) nonReentrant whenNotPaused {
+        Escrow storage e = escrows[escrowId];
+        if (!e.exists) revert UnknownEscrow();
+        uint256 amount = e.remaining;
+        if (amount == 0) revert InvalidAllocation();
         e.remaining = 0;
         IERC20(e.token).safeTransfer(e.payer, amount);
         emit EscrowRefunded(escrowId, e.payer, amount);

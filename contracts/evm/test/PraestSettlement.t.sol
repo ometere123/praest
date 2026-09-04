@@ -48,4 +48,36 @@ contract PraestSettlementTest is Test {
     function test_unknown_beneficiary_rejected_by_local_policy() public { vm.expectRevert(PraestEscrow.InvalidAllocation.selector); r.handle(origin, sender, payload(bytes32(uint256(9)), uint64(block.timestamp+100), local, bytes32(uint256(uint160(address(r)))), address(0xD00D), 1)); }
     function test_remedy_cap_rejected() public { vm.expectRevert(PraestEscrow.PolicyMismatch.selector); r.handle(origin, sender, payload(bytes32(uint256(9)), uint64(block.timestamp+100), local, bytes32(uint256(uint160(address(r)))), customer, 500_001)); }
     function test_provider_allocation_allowed() public { r.handle(origin, sender, payload(bytes32(uint256(11)), uint64(block.timestamp+100), local, bytes32(uint256(uint160(address(r)))), provider, 750_000)); assertEq(t.balanceOf(provider), 750_000); }
+
+    function test_refund_blocked_before_lock_window() public {
+        vm.prank(payer);
+        vm.expectRevert(PraestEscrow.PolicyMismatch.selector);
+        e.refundUnused(bytes32(uint256(1)));
+    }
+    function test_refund_allowed_after_lock_window_with_nothing_settled() public {
+        vm.warp(block.timestamp + e.DEFAULT_REFUND_LOCK_SECONDS());
+        vm.prank(payer);
+        e.refundUnused(bytes32(uint256(1)));
+        assertEq(t.balanceOf(payer), 1_000_000);
+    }
+    function test_refund_still_blocked_after_lock_if_something_settled() public {
+        r.handle(origin, sender, payload(bytes32(uint256(20)), uint64(block.timestamp + 100), local, bytes32(uint256(uint160(address(r)))), customer, 1));
+        vm.warp(block.timestamp + e.DEFAULT_REFUND_LOCK_SECONDS());
+        vm.prank(payer);
+        vm.expectRevert(PraestEscrow.AlreadyUsed.selector);
+        e.refundUnused(bytes32(uint256(1)));
+    }
+    function test_settler_refund_bypasses_lock_for_legitimate_early_cancellation() public {
+        // address(r) (PraestSettlementReceiver) already holds SETTLER_ROLE from setUp - the same
+        // trusted role that executes normal settlement instructions can also authorize an early
+        // full refund (e.g. agreement canceled before activation) without waiting on the lock.
+        vm.prank(address(r));
+        e.settlerRefund(bytes32(uint256(1)));
+        assertEq(t.balanceOf(payer), 1_000_000);
+    }
+    function test_payer_cannot_call_settler_refund() public {
+        vm.prank(payer);
+        vm.expectRevert();
+        e.settlerRefund(bytes32(uint256(1)));
+    }
 }

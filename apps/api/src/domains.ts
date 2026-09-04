@@ -17,7 +17,7 @@ import {ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_PROGRA
 const ERC20_ABI = parseAbi(["function approve(address spender,uint256 amount) returns (bool)"]);
 const ESCROW_ABI = parseAbi([
   "function fund(bytes32 escrowId,bytes32 agreementId,address token,address provider,address customer,uint16 maxCustomerRemedyBps,uint256 amount)",
-  "function escrows(bytes32) view returns (bytes32 agreementId,address token,address payer,address provider,address customer,uint16 maxCustomerRemedyBps,uint256 deposited,uint256 remaining,bool exists)"
+  "function escrows(bytes32) view returns (bytes32 agreementId,address token,address payer,address provider,address customer,uint16 maxCustomerRemedyBps,uint256 deposited,uint256 remaining,uint64 lockUntil,bool exists)"
 ]);
 
 function parseTerms(value: unknown): any {
