@@ -36,6 +36,11 @@ export const globalpingProvider: ProbeProvider = {
 
     if (MEASUREMENT_TYPE !== "http") return fail(`GLOBALPING_MEASUREMENT_TYPE=${MEASUREMENT_TYPE} is not supported by the PRAEST evidence model (only "http" is normalized today)`);
 
+    // Hard invariant, not a config convention: Globalping is a public third-party probe network -
+    // a target carrying auth headers (a credentialed/private check) must never reach it. Route
+    // those to the native provider instead.
+    if (t.authHeaders && Object.keys(t.authHeaders).length > 0) return fail("Globalping cannot be used for authenticated targets (authHeaders present) - use PROBE_PROVIDER=native for private/credentialed checks");
+
     const u = new URL(t.url);
     if (u.protocol !== "https:") return fail("HTTPS only");
 
@@ -50,7 +55,7 @@ export const globalpingProvider: ProbeProvider = {
         locations: [locationFor(region)],
         limit: 1,
         measurementOptions: {
-          request: { path: u.pathname, query: u.search.replace(/^\?/, ""), method: (t.method as any) || "GET", headers: { ...(t.authHeaders || {}) } },
+          request: { path: u.pathname, query: u.search.replace(/^\?/, ""), method: (t.method as any) || "GET" },
           protocol: "HTTPS",
           port: u.port ? Number(u.port) : undefined,
         },

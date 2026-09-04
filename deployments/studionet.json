@@ -1,0 +1,43 @@
+{
+  "network": "studionet",
+  "rpc": "https://studio.genlayer.com/api",
+  "deployedAt": "2026-09-03T23:43:25.203Z",
+  "contracts": {
+    "AgreementRegistry": {
+      "txHash": "0x2552c7d3f734f90260e0c43f69fdf753184df3119dfb744e46cbd01d25489868",
+      "address": "0xB13da7577359265291388997a7cbEca0ce5c8Dc0"
+    },
+    "EvidenceAssessor": {
+      "txHash": "0x8245e666888805f2698b26997f58d18663c9e8e5bc97d4d6b2cf326dfe9ee0dc",
+      "address": "0x63a555F65BBD82Ddd23Db002a40f9467A404c5f7"
+    },
+    "ServiceAssuranceResolver": {
+      "txHash": "0x307d13ab17c8bfba0366fdbf15073dcee332a7443b28d909a6e1cd3b9290a4c6",
+      "address": "0xdd62b392b69897E3f9D0A4735394FE7890dEDDe4"
+    },
+    "DisputeResolver": {
+      "txHash": "0xc079c470d4a72b135124e752a95561ad4c65ea1f3690bb89bb739881cc475479",
+      "address": "0x4cc6Cfe0f4Be61498900C3461E03ef7D6f547d9a"
+    },
+    "SettlementEntitlement": {
+      "txHash": "0xf71d2eeaf64dbe68b937bdb4d0f506242dd9f9dbe3f00e131fc39521c9a89e29",
+      "address": "0x84232c156c9d1269Cc989f6d5DeAc2C5fcE77772"
+    },
+    "AgentAgreementResolver": {
+      "txHash": "0x7a155925bc4133df41726090c1060b8532989eae9d885ff872ac9381fff4a031",
+      "address": "0x719bBaB8aDF0041F7454FF75d0325e3391c54bb3"
+    },
+    "LiabilityResolver": {
+      "txHash": "0x16127b6653bd1c86dec27120d2b6fc8a2c410c94276fa6c9c04759bfc00b924d",
+      "address": "0xA6113751cF79c7e9659Dde1c31Ff7Fd2983906FB"
+    },
+    "EventResolver": {
+      "txHash": "0x01491168c65424bc1cd9ca24408b4da199a6b23b1874896eb993fbcbde3a696d",
+      "address": "0x6d6369257B342be1Ab422f925E98dba817D4F97f"
+    },
+    "DecisionOutbox": {
+      "txHash": "0x52c1893b4bb31fa88e8d452f6b8d7885939534191b175670770e707504e70f6a",
+      "address": "0xADa36131eC70e43E4fe31347ebAcB13Fc76B938E"
+    }
+  }
+}

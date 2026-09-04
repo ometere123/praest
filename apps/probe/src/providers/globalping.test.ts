@@ -21,7 +21,6 @@ const target = {
   method: "GET",
   timeoutMs: 5000,
   assertions: { expectedStatus: 200 },
-  authHeaders: { authorization: "Bearer test" },
 };
 
 const finishedResult = (overrides: any = {}) => ({
@@ -94,13 +93,19 @@ describe("request construction", () => {
     expect(req.measurementOptions.request.path).toBe("/health");
     expect(req.measurementOptions.request.query).toBe("x=1");
     expect(req.measurementOptions.request.method).toBe("GET");
-    expect(req.measurementOptions.request.headers.authorization).toBe("Bearer test");
     expect(req.measurementOptions.protocol).toBe("HTTPS");
   });
 
   it("rejects non-HTTPS targets before calling the API", async () => {
     const r = await globalpingProvider.run({ ...target, url: "http://example.com" } as any, "US");
     expect(r.collectorStatus).toBe("COLLECTOR_ERROR");
+    expect(createMeasurement).not.toHaveBeenCalled();
+  });
+
+  it("refuses authenticated targets (authHeaders present) rather than forwarding credentials to a public third-party probe network", async () => {
+    const r = await globalpingProvider.run({ ...target, authHeaders: { authorization: "Bearer secret" } } as any, "US");
+    expect(r.collectorStatus).toBe("COLLECTOR_ERROR");
+    expect(r.error).toMatch(/authenticated targets/);
     expect(createMeasurement).not.toHaveBeenCalled();
   });
 });
