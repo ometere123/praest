@@ -1,7 +1,7 @@
 FROM node:22-bookworm-slim AS build
 WORKDIR /app
 COPY . .
-RUN npm install --no-audit --no-fund && npm run build -w @praest/worker
+RUN npm install --no-audit --no-fund && npx turbo run build --filter=@praest/worker...
 FROM node:22-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production
