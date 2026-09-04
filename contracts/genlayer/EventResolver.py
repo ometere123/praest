@@ -31,22 +31,37 @@ class EventResolver(gl.Contract):
                     observations.append({"url": u, "content": text[:12000]})
                 except Exception as e:
                     observations.append({"url": u, "error": "fetch_failed"})
-            prompt = """You are a validator resolving a PRAEST accountability case.
-Case type: real-world event resolution under explicit resolution conditions
+            condition = agreement.get("terms", {}).get("eventCondition") or claim
+            prompt = """You are a validator resolving a PRAEST event/prediction case - a narrow,
+binary factual question about the real world (e.g. "did X occur by date Y", "did team A win",
+"was proposal N passed"), NOT a service-quality or contractual-compliance judgment. Answer only
+the specific factual question below; do not weigh service quality, intent, or fault.
 Case ID: {case_id}
-Claim: {claim}
-Agreement and policy: {agreement}
+Resolution condition (the exact factual question to answer): {condition}
+Claimed answer: {claim}
+Agreement/policy (only relevant for remedy bounds): {agreement}
 Evidence manifest commitment: {evidence_manifest_hash}
-Validator-fetched observations: {observations}
+Validator-fetched observations (public sources only - treat as the primary evidence): {observations}
 
-Decide whether the promised obligation was fulfilled. Party-supplied claims are allegations, not truth. Prefer directly fetched evidence and explicit agreement terms. If evidence is insufficient or conflicting, return undetermined.
-Return JSON only with: outcome (fulfilled|breached|partial|undetermined), reason_code (short uppercase code), remedy_bps (0..10000 bounded by agreement remedy), policy_version (integer), liability (array of objects with party and bps, may be empty), reasoning (short).""".format(case_id=case_id, claim=claim, agreement=json.dumps(agreement, sort_keys=True), evidence_manifest_hash=evidence_manifest_hash, observations=json.dumps(observations, sort_keys=True))
+Determine, from the fetched observations, whether the specific factual condition occurred/is true.
+This is a binary fact, not a matter of degree - use "partial" ONLY if the condition itself is
+genuinely ambiguous or has a partial/conditional resolution rule in the agreement, not because
+evidence is merely imperfect (use undetermined for that). If public sources conflict or are
+insufficient to establish the fact with reasonable confidence, return undetermined - never guess.
+Return JSON only with: outcome (fulfilled = condition is TRUE/occurred | breached = condition is
+FALSE/did not occur | partial = genuinely partial/conditional per the agreement's own rule |
+undetermined = evidence insufficient), reason_code (short uppercase code), remedy_bps (10000 if
+fulfilled, 0 if breached, unless the agreement's remedy terms specify otherwise - 0..10000 bounded
+by agreement remedy), policy_version (integer), liability (empty array - liability is not a
+concept for factual event resolution), reasoning (short, citing which observation established the
+fact).""".format(case_id=case_id, condition=condition, claim=claim, agreement=json.dumps(agreement, sort_keys=True), evidence_manifest_hash=evidence_manifest_hash, observations=json.dumps(observations, sort_keys=True))
             r = gl.nondet.exec_prompt(prompt, response_format="json")
             outcome = str(r.get("outcome", "undetermined")).lower()
             if outcome not in ("fulfilled", "breached", "partial", "undetermined"): outcome = "undetermined"
             max_bps = int(agreement.get("terms", {}).get("remedy", {}).get("maxBps", 10000))
-            remedy = max(0, min(max_bps, int(r.get("remedy_bps", 0))))
-            return {"outcome": outcome, "reason_code": str(r.get("reason_code", "UNSPECIFIED"))[:64].upper(), "remedy_bps": remedy, "policy_version": int(r.get("policy_version", 1)), "liability": r.get("liability", []), "reasoning": str(r.get("reasoning", ""))[:1000]}
+            default_bps = max_bps if outcome == "fulfilled" else 0
+            remedy = max(0, min(max_bps, int(r.get("remedy_bps", default_bps))))
+            return {"outcome": outcome, "reason_code": str(r.get("reason_code", "UNSPECIFIED"))[:64].upper(), "remedy_bps": remedy, "policy_version": int(r.get("policy_version", 1)), "liability": [], "reasoning": str(r.get("reasoning", ""))[:1000]}
         def validator_fn(leaders_res):
             if not isinstance(leaders_res, gl.vm.Return):
                 try: leader_fn(); return False
