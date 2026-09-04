@@ -24,9 +24,17 @@ solana_program::entrypoint!(process_instruction);
 
 const CONFIG_SEED: &[u8] = b"praest-config";
 const ESCROW_SEED: &[u8] = b"praest-escrow";
+// Known structural limit: replay protection is a Vec bounded by this cap, not a per-instruction
+// PDA - an escrow that receives more than MAX_PROCESSED settlement instructions over its lifetime
+// will permanently reject further ones. The full fix (per-instruction PDA keyed on
+// [ESCROW_SEED, escrow_id, instruction_id]) is a larger structural change tracked separately.
 const MAX_PROCESSED: usize = 64;
 const ESCROW_SPACE: usize = 3_200;
 const CONFIG_SPACE: usize = 180;
+// Payer self-refund is only available once this window has passed with nothing processed -
+// mirrors PraestEscrow.sol's DEFAULT_REFUND_LOCK_SECONDS. Closes the gap where a payer could
+// withdraw funding mid-agreement/mid-dispute, before adjudication had a chance to run.
+const DEFAULT_REFUND_LOCK_SECONDS: i64 = 7 * 24 * 60 * 60;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug)]
 pub struct Config {
@@ -52,6 +60,7 @@ pub struct Escrow {
     pub remaining: u64,
     pub processed: Vec<[u8; 32]>,
     pub bump: u8,
+    pub lock_until: i64,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug)]
@@ -72,6 +81,10 @@ pub enum PraestInstruction {
         amount: u64,
     },
     RefundEscrow { escrow_id: [u8; 32] },
+    /// Authorized early refund (agreement canceled before activation, or a finalized GenLayer
+    /// decision awarding a full refund) - bypasses the payer-side lock, gated by the same Config
+    /// owner that controls SetPaused/SetRoute. Mirrors PraestEscrow.sol's settlerRefund().
+    OwnerRefund { escrow_id: [u8; 32] },
     SetPaused { paused: bool },
     SetRoute { origin: u32, sender: [u8; 32], ism: Pubkey },
 }
@@ -111,6 +124,7 @@ pub fn process_instruction(program_id: &Pubkey, accounts: &[AccountInfo], data: 
         PraestInstruction::CreateEscrow { escrow_id, agreement_id, provider, customer, max_customer_remedy_bps, amount } =>
             create_escrow(program_id, accounts, escrow_id, agreement_id, provider, customer, max_customer_remedy_bps, amount),
         PraestInstruction::RefundEscrow { escrow_id } => refund(program_id, accounts, escrow_id),
+        PraestInstruction::OwnerRefund { escrow_id } => owner_refund(program_id, accounts, escrow_id),
         PraestInstruction::SetPaused { paused } => admin_update(program_id, accounts, Some(paused), None),
         PraestInstruction::SetRoute { origin, sender, ism } => admin_update(program_id, accounts, None, Some((origin, sender, ism))),
     }
@@ -174,12 +188,17 @@ fn create_escrow(
     }
     let transfer = token_instruction::transfer(token.key, payer_ata.key, vault.key, payer.key, &[], amount)?;
     invoke(&transfer, &[payer_ata.clone(), vault.clone(), payer.clone(), token.clone()])?;
+    let now = Clock::get()?.unix_timestamp;
     write(escrow, &Escrow {
         escrow_id: id, agreement_id, mint: *mint.key, payer: *payer.key, provider, customer,
         max_customer_remedy_bps, deposited: amount, remaining: amount, processed: Vec::new(), bump,
+        lock_until: now.saturating_add(DEFAULT_REFUND_LOCK_SECONDS),
     })
 }
 
+/// Payer recovery is only possible before anything was processed AND once the lock window has
+/// passed - a payer cannot unilaterally withdraw funding while an agreement is still active or a
+/// dispute could still be open. Legitimate early cancellation goes through owner_refund.
 fn refund(program_id: &Pubkey, accounts: &[AccountInfo], id: [u8; 32]) -> ProgramResult {
     let it = &mut accounts.iter();
     let payer = next_account_info(it)?;
@@ -190,10 +209,41 @@ fn refund(program_id: &Pubkey, accounts: &[AccountInfo], id: [u8; 32]) -> Progra
     let token = next_account_info(it)?;
     let mut e: Escrow = read(escrow_info)?;
     let (key, bump) = escrow_pda(program_id, &id);
-    if escrow_info.key != &key || payer.key != &e.payer || !payer.is_signer || !e.processed.is_empty() || e.remaining != e.deposited || mint.key != &e.mint || token.key != &spl_token::id() {
+    let now = Clock::get()?.unix_timestamp;
+    if escrow_info.key != &key || payer.key != &e.payer || !payer.is_signer || !e.processed.is_empty() || e.remaining != e.deposited || mint.key != &e.mint || token.key != &spl_token::id() || now < e.lock_until {
         return Err(ProgramError::InvalidArgument);
     }
     if vault.key != &get_associated_token_address_with_program_id(&key, mint.key, &spl_token::id()) || payer_ata.key != &get_associated_token_address_with_program_id(payer.key, mint.key, &spl_token::id()) {
+        return Err(ProgramError::InvalidArgument);
+    }
+    let amount = e.remaining;
+    if amount == 0 { return Ok(()); }
+    let ix = token_instruction::transfer(token.key, vault.key, payer_ata.key, &key, &[], amount)?;
+    invoke_signed(&ix, &[vault.clone(), payer_ata.clone(), escrow_info.clone(), token.clone()], &[&[ESCROW_SEED, &id, &[bump]]])?;
+    e.remaining = 0;
+    write(escrow_info, &e)
+}
+
+/// Authorized early refund - gated by the Config owner (same authority as SetPaused/SetRoute),
+/// bypasses the payer-side lock for legitimate early cancellation/finalized-full-refund cases.
+fn owner_refund(program_id: &Pubkey, accounts: &[AccountInfo], id: [u8; 32]) -> ProgramResult {
+    let it = &mut accounts.iter();
+    let cfg_info = next_account_info(it)?;
+    let owner = next_account_info(it)?;
+    let escrow_info = next_account_info(it)?;
+    let mint = next_account_info(it)?;
+    let vault = next_account_info(it)?;
+    let payer_ata = next_account_info(it)?;
+    let token = next_account_info(it)?;
+    let c: Config = read(cfg_info)?;
+    let (cfg_key, _) = config_pda(program_id);
+    if cfg_info.key != &cfg_key || owner.key != &c.owner || !owner.is_signer { return Err(ProgramError::MissingRequiredSignature); }
+    let mut e: Escrow = read(escrow_info)?;
+    let (key, bump) = escrow_pda(program_id, &id);
+    if escrow_info.key != &key || mint.key != &e.mint || token.key != &spl_token::id() {
+        return Err(ProgramError::InvalidArgument);
+    }
+    if vault.key != &get_associated_token_address_with_program_id(&key, mint.key, &spl_token::id()) || payer_ata.key != &get_associated_token_address_with_program_id(&e.payer, mint.key, &spl_token::id()) {
         return Err(ProgramError::InvalidArgument);
     }
     let amount = e.remaining;
