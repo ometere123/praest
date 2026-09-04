@@ -359,6 +359,19 @@ export class LifecycleService {
       .where(eq(adjudications.id, adj.id));
     await this.db.update(cases).set({ status: "finalized", updatedAt: now }).where(eq(cases.id, c.id));
 
+    // Record the finalized remedy on GenLayer SettlementEntitlement before any settlement is
+    // constructed. SettlementEngine.build() independently re-reads this on-chain entitlement and
+    // requires it to match this decision exactly - so a compromised PRAEST database cannot alter
+    // remedyBps/outcome/policyVersion after the fact and have a different amount settled.
+    const entitlementAddress = process.env.GENLAYER_SETTLEMENT_ENTITLEMENT_ADDRESS;
+    if (!entitlementAddress) throw new Error("GENLAYER_SETTLEMENT_ENTITLEMENT_ADDRESS required to finalize a settleable decision");
+    try {
+      await gl.write(entitlementAddress, "record", [decision.decisionHash, decision.outcome, decision.remedyBps, decision.policyVersion]);
+    } catch {
+      // already recorded (e.g. a retried finalize call) - SettlementEngine.build() verifies the
+      // stored entitlement matches this decision regardless of who wrote it first.
+    }
+
     const instruction = await this.settlement.build(org, decision.id);
     await this.authorizeOutbox(gl, decision, instruction);
     return { decision, instruction };

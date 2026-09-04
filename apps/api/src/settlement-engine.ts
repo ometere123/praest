@@ -20,6 +20,7 @@ import {
 } from "@praest/protocol";
 import {DB} from "./database.module.js";
 import {addressToBytes32, idToBytes32} from "./address.js";
+import {StudioNetAdapter} from "./genlayer.js";
 
 const STUDIO_HUB_DOMAIN = Number(process.env.PRAEST_HYPERLANE_ORIGIN_DOMAIN || 300);
 const INSTRUCTION_TTL_SECONDS = Number(process.env.PRAEST_SETTLEMENT_INSTRUCTION_TTL_SECONDS || 86_400);
@@ -35,6 +36,23 @@ export class SettlementEngine {
       .where(and(eq(decisions.id, decisionId), eq(decisions.organizationId, org)))
       .limit(1);
     if (!d) throw new Error("decision not found");
+
+    // Independently re-read the finalized remedy from GenLayer SettlementEntitlement (recorded by
+    // LifecycleService.finalize() at the moment the decision was created) and require it to match
+    // this decision row exactly. This is the check that stops a compromised PRAEST database from
+    // settling a different remedy than GenLayer actually decided.
+    const entitlementAddress = process.env.GENLAYER_SETTLEMENT_ENTITLEMENT_ADDRESS;
+    if (!entitlementAddress) throw new Error("GENLAYER_SETTLEMENT_ENTITLEMENT_ADDRESS required to build a settlement");
+    const gl = new StudioNetAdapter();
+    const entitlement: any = await gl.read(entitlementAddress, "get", [d.decisionHash], true);
+    if (
+      !entitlement ||
+      String(entitlement.outcome) !== String(d.outcome) ||
+      Number(entitlement.remedy_bps) !== Number(d.remedyBps) ||
+      Number(entitlement.policy_version) !== Number(d.policyVersion)
+    ) {
+      throw new Error("decision does not match the entitlement recorded on GenLayer SettlementEntitlement - refusing to build settlement");
+    }
 
     const [c] = await this.db
       .select()
