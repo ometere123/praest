@@ -31,16 +31,30 @@ class AgentAgreementResolver(gl.Contract):
                     observations.append({"url": u, "content": text[:12000]})
                 except Exception as e:
                     observations.append({"url": u, "error": "fetch_failed"})
-            prompt = """You are a validator resolving a PRAEST accountability case.
-Case type: autonomous agent task fulfilment and deliverables
+            task = agreement.get("terms", {}).get("task", {})
+            prompt = """You are a validator resolving a PRAEST accountability case for an
+AUTONOMOUS AGENT's task/deliverable - not a service-uptime or SLA case. Judge specifically
+against the agreed task specification, not general service quality.
 Case ID: {case_id}
-Claim: {claim}
+Agreed task specification (description/deadline/deliverable format/tool constraints/payment
+conditions, if present): {task}
+Claim (what the agent/counterparty asserts happened): {claim}
 Agreement and policy: {agreement}
 Evidence manifest commitment: {evidence_manifest_hash}
-Validator-fetched observations: {observations}
+Validator-fetched observations (the agent's own execution/tool/deliverable evidence, and any
+public corroboration): {observations}
 
-Decide whether the promised obligation was fulfilled. Party-supplied claims are allegations, not truth. Prefer directly fetched evidence and explicit agreement terms. If evidence is insufficient or conflicting, return undetermined.
-Return JSON only with: outcome (fulfilled|breached|partial|undetermined), reason_code (short uppercase code), remedy_bps (0..10000 bounded by agreement remedy), policy_version (integer), liability (array of objects with party and bps, may be empty), reasoning (short).""".format(case_id=case_id, claim=claim, agreement=json.dumps(agreement, sort_keys=True), evidence_manifest_hash=evidence_manifest_hash, observations=json.dumps(observations, sort_keys=True))
+Judge specifically: (1) was a deliverable produced matching the agreed format/scope, (2) was it
+produced within the agreed deadline if one was set, (3) did the agent operate within its stated
+tool/authority constraints, (4) were any stated payment conditions satisfied. An agent's own
+self-reported completion is an allegation, not proof - require corroborating evidence (execution
+traces, deliverable artifacts, timestamps) before crediting fulfilment. If evidence is
+insufficient or conflicting, return undetermined.
+Return JSON only with: outcome (fulfilled|breached|partial|undetermined), reason_code (short
+uppercase code - e.g. DEADLINE_BREACH, WRONG_FORMAT, TOOL_CONSTRAINT_VIOLATION,
+DELIVERABLE_CONFIRMED), remedy_bps (0..10000 bounded by agreement remedy), policy_version
+(integer), liability (array of objects with party and bps, may be empty - use only if the
+agreement involves multiple agents with distinguishable fault), reasoning (short).""".format(case_id=case_id, task=json.dumps(task, sort_keys=True), claim=claim, agreement=json.dumps(agreement, sort_keys=True), evidence_manifest_hash=evidence_manifest_hash, observations=json.dumps(observations, sort_keys=True))
             r = gl.nondet.exec_prompt(prompt, response_format="json")
             outcome = str(r.get("outcome", "undetermined")).lower()
             if outcome not in ("fulfilled", "breached", "partial", "undetermined"): outcome = "undetermined"
