@@ -9,7 +9,7 @@ no-entrypoint = []
 [dependencies]
 borsh = { version = "1.5", features = ["derive"] }
 solana-program = "=3.0.0"
-solana-system-interface = { version = "=2.0.0", features = ["bincode"] }
+solana-system-interface = { version = "=3.3.0", features = ["bincode"] }
 spl-associated-token-account = { version = "8.0", features = ["no-entrypoint"] }
 spl-token = { version = "9.0", features = ["no-entrypoint"] }
 hyperlane-sealevel-mailbox = { git = "https://github.com/hyperlane-xyz/hyperlane-monorepo", rev = "c5bf59d329a09b6abf6c0d58ef0d486ca4a8ac6e", package = "hyperlane-sealevel-mailbox", features=["no-entrypoint"] }
