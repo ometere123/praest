@@ -27,11 +27,14 @@
     "verify:release": "node scripts/verify-repo.mjs && node scripts/doctor.mjs"
   },
   "devDependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "@types/node": "^22.15.0",
+    "tsx": "^4.20.0",
     "turbo": "^2.5.0",
     "typescript": "^5.9.0",
-    "tsx": "^4.20.0",
-    "vitest": "^3.2.0",
-    "@types/node": "^22.15.0",
-    "@openzeppelin/contracts": "^5.4.0"
+    "vitest": "^3.2.0"
+  },
+  "dependencies": {
+    "genlayer-js": "2.0.0-rc.1"
   }
 }

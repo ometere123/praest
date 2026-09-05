@@ -1,7 +1,10 @@
-# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+# v0.3.0
+# { "Depends": "py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0" }
 
-from genlayer import *
+import genlayer as gl
+from genlayer.types import *
 import json
+
 
 def _normalize_liability(raw) -> list:
     """Validates structure and enforces sum==10000 when non-empty - a malformed or
@@ -22,6 +25,7 @@ def _normalize_liability(raw) -> list:
     if sum(i["bps"] for i in items) != 10000: return []
     return sorted(items, key=lambda i: i["party"])
 
+
 def _liability_matches(leader: list, other: list) -> bool:
     if len(leader) != len(other): return False
     leader = sorted(leader, key=lambda i: str(i.get("party"))) if leader else []
@@ -31,10 +35,12 @@ def _liability_matches(leader: list, other: list) -> bool:
         if abs(int(a.get("bps", 0)) - int(b.get("bps", 0))) > 500: return False
     return True
 
-class LiabilityResolver(gl.Contract):
+
+class LiabilityResolver(gl.contract.Contract):
     owner: Address
-    resolutions: TreeMap[str, str]
-    def __init__(self): self.owner = gl.message.sender_account
+    resolutions: gl.storage.TreeMap[str, str]
+
+    def __init__(self): self.owner = gl.message.sender_address
 
     def _resolve(self, case_id: str, agreement_json: str, claim: str, evidence_manifest_json: str, evidence_manifest_hash: str) -> dict:
         agreement = json.loads(agreement_json)
@@ -99,12 +105,12 @@ summing to exactly 10000 when non-empty), reasoning (short)."""\
             # re-derive it and compare, don't just trust the leader's shape/format.
             if not _liability_matches(leader.get("liability", []), other.get("liability", [])): return False
             return True
-        return gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
+        return gl.vm.run_nondet_default(leader_fn, validator_fn)
 
     @gl.public.write
     def resolve(self, case_id: str, agreement_json: str, claim: str, evidence_manifest_json: str, evidence_manifest_hash: str) -> None:
-        if gl.message.sender_account != self.owner: raise gl.UserError("only owner")
-        if case_id in self.resolutions: raise gl.UserError("case already resolved")
+        if gl.message.sender_address != self.owner: raise gl.vm.UserError("only owner")
+        if case_id in self.resolutions: raise gl.vm.UserError("case already resolved")
         result = self._resolve(case_id, agreement_json, claim, evidence_manifest_json, evidence_manifest_hash)
         self.resolutions[case_id] = json.dumps(result, sort_keys=True)
 

@@ -1,5 +1,18 @@
 networks:
-  default: studionet
+  # Consensus v0.6 migration: studioDevnet (chain 61997, https://studio-dev.genlayer.com/api) is
+  # the current test network - a distinct network from stable studionet (chain 61999), not an RPC
+  # override of it. See docs/GENLAYER_V06_MIGRATION.md.
+  default: studioDevnet
+  studioDevnet:
+    id: 61997
+    url: https://studio-dev.genlayer.com/api
+    # This installed gltest CLI (0.40.0-rc.3) only recognizes 4 fixed chain_type values and
+    # predates a dedicated "studioDevnet" type - chain_type here selects the RPC/consensus wire
+    # protocol family (v0.6-style, same as studionet), NOT the network identity. The id/url above
+    # are what actually point this entry at studio-dev rather than the stable network.
+    chain_type: studionet
+    accounts:
+      - ${GENLAYER_STUDIONET_PRIVATE_KEY}
   studionet: {}
 paths:
   contracts: "."

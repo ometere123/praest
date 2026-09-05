@@ -38,7 +38,7 @@
     "bs58": "^6.0.0",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.6.0",
-    "genlayer-js": "1.1.8",
+    "genlayer-js": "2.0.0-rc.1",
     "jose": "^6.0.0",
     "pg": "^8.16.0",
     "reflect-metadata": "^0.2.2",

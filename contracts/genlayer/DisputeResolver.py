@@ -1,12 +1,16 @@
-# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+# v0.3.0
+# { "Depends": "py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0" }
 
-from genlayer import *
+import genlayer as gl
+from genlayer.types import *
 import json
 
-class DisputeResolver(gl.Contract):
+
+class DisputeResolver(gl.contract.Contract):
     owner: Address
-    resolutions: TreeMap[str, str]
-    def __init__(self): self.owner = gl.message.sender_account
+    resolutions: gl.storage.TreeMap[str, str]
+
+    def __init__(self): self.owner = gl.message.sender_address
 
     def _resolve(self, case_id: str, agreement_json: str, claim: str, evidence_manifest_json: str, evidence_manifest_hash: str) -> dict:
         agreement = json.loads(agreement_json)
@@ -56,12 +60,12 @@ Return JSON only with: outcome (fulfilled|breached|partial|undetermined), reason
             if abs(int(leader.get("remedy_bps", 0)) - int(other.get("remedy_bps", 0))) > 500: return False
             if int(leader.get("policy_version", 1)) != int(other.get("policy_version", 1)): return False
             return True
-        return gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
+        return gl.vm.run_nondet_default(leader_fn, validator_fn)
 
     @gl.public.write
     def resolve(self, case_id: str, agreement_json: str, claim: str, evidence_manifest_json: str, evidence_manifest_hash: str) -> None:
-        if gl.message.sender_account != self.owner: raise gl.UserError("only owner")
-        if case_id in self.resolutions: raise gl.UserError("case already resolved")
+        if gl.message.sender_address != self.owner: raise gl.vm.UserError("only owner")
+        if case_id in self.resolutions: raise gl.vm.UserError("case already resolved")
         result = self._resolve(case_id, agreement_json, claim, evidence_manifest_json, evidence_manifest_hash)
         self.resolutions[case_id] = json.dumps(result, sort_keys=True)
 

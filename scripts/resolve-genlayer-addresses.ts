@@ -1,8 +1,10 @@
-import {readFile,writeFile} from 'node:fs/promises';import {existsSync} from 'node:fs';import {config as loadEnv} from 'dotenv';import {createClient} from 'genlayer-js';import {studionet} from 'genlayer-js/chains';
+import {readFile,writeFile} from 'node:fs/promises';import {existsSync} from 'node:fs';import {config as loadEnv} from 'dotenv';import {createClient} from 'genlayer-js';import * as chains from 'genlayer-js/chains';
 if(existsSync('.env.local'))loadEnv({path:'.env.local'});else if(existsSync('.env'))loadEnv();
 async function main(){
-const client=createClient({chain:studionet} as any);
-const path='deployments/studionet.json';
+const networkName=process.env.GENLAYER_NETWORK||'studioDevnet';
+const chain=(chains as any)[networkName];if(!chain)throw new Error(`unknown GenLayer chain preset: ${networkName}`);
+const client=createClient({chain} as any);
+const path=`deployments/${networkName}.json`;
 const deployment:any=JSON.parse(await readFile(path,'utf8'));
 for(const [name,entry] of Object.entries<any>(deployment.contracts)){
   if(entry.address){console.log(`${name}: already have address ${entry.address}`);continue;}
