@@ -37,13 +37,16 @@ On authenticated bootstrap PRAEST creates/synchronises the internal user/organis
 
 ## 4. GenLayer StudioNet
 
-Fund a dedicated StudioNet submitter, set `GENLAYER_STUDIONET_PRIVATE_KEY` and run:
+Fund a dedicated submitter, set `GENLAYER_STUDIONET_PRIVATE_KEY`, and set `GENLAYER_NETWORK`
+(defaults to `studioDevnet`, chain `61997`, `https://studio-dev.genlayer.com/api` - the current
+consensus v0.6 migration/test network; set to `studionet` for the stable network, chain `61999`).
+See `docs/GENLAYER_V06_MIGRATION.md`. Then run:
 
 ```bash
 npm run genlayer:deploy
 ```
 
-The script deploys all Intelligent Contracts and writes `deployments/studionet.json`. **All 9 contracts were deployed 2026-09-04** (tx hashes recorded); if the receipt's contract address isn't captured at deploy time, run `npx tsx scripts/resolve-genlayer-addresses.ts` afterward to backfill it from each tx hash's `txDataDecoded.contractAddress` (the original deploy script's fallback field list never checked that field). Populate the resulting addresses into the runtime environment - `AgreementRegistry`, `EvidenceAssessor`, `SettlementEntitlement`, and `LiabilityResolver` are now actually read by application code (agreement activation/adjudication/finalization/resolver routing), not just deployed placeholders. Do not proceed to cross-chain settlement until actual StudioNet adjudication reaches `FINALIZED` and `DecisionOutbox` can be read reproducibly.
+The script deploys all Intelligent Contracts and writes `deployments/<GENLAYER_NETWORK>.json` (merging into the file per-contract, so a mid-batch failure never loses an already-succeeded, fee-paid deployment). **All 9 contracts were deployed to `studioDevnet` on 2026-09-05** with the corrected consensus v0.6 runner pin (`deployments/studioDevnet.json`); the earlier `deployments/studionet.json` from 2026-09-04 is for the old stable network and is not used unless `GENLAYER_NETWORK=studionet`. If the receipt's contract address isn't captured at deploy time, run `npx tsx scripts/resolve-genlayer-addresses.ts` afterward to backfill it. Populate the resulting addresses into the runtime environment - `AgreementRegistry`, `EvidenceAssessor`, `SettlementEntitlement`, and `LiabilityResolver` are now actually read by application code (agreement activation/adjudication/finalization/resolver routing), not just deployed placeholders. All 6 contracts using `gl.vm.run_nondet_default` have live-proven `FINALIZED`/`FINISHED_WITH_RETURN` semantic calls on `studioDevnet` - see `docs/GENLAYER_V06_MIGRATION.md` for the full evidence record.
 
 ## 5. EVM destination contracts
 

@@ -103,8 +103,9 @@ Both blank means `InternetCourtService.exportCase()` just returns the prepared p
 
 | Variable | Cat | Required? | Secret? | Note |
 |---|---|---|---|---|
-| `GENLAYER_RPC_URL` / `GENLAYER_CHAIN_ID` | A | documentation only | no | **not read by application code** — `genlayer-js`'s `studionet` chain preset supplies these at runtime. Kept for reference/tooling only. |
-| `GENLAYER_STUDIONET_PRIVATE_KEY` (or legacy `GENLAYER_PRIVATE_KEY`) | B | yes | **yes** | signs StudioNet transactions; PRAEST has no unlocked-CLI alternative today |
+| `GENLAYER_NETWORK` | A | no | no | selects the `genlayer-js` chain preset (`apps/api/src/genlayer.ts`, `apps/bridge`, deploy/resolve scripts). Defaults to `studioDevnet` (chain `61997`, consensus v0.6 test network) — set to `studionet` for the stable network (chain `61999`). See `docs/GENLAYER_V06_MIGRATION.md`. |
+| `GENLAYER_RPC_URL` / `GENLAYER_CHAIN_ID` | A | documentation only | no | **not read by application code** — the `genlayer-js` chain preset `GENLAYER_NETWORK` selects supplies these at runtime. Kept for reference/tooling only. |
+| `GENLAYER_STUDIONET_PRIVATE_KEY` (or legacy `GENLAYER_PRIVATE_KEY`) | B | yes | **yes** | signs transactions on whichever network `GENLAYER_NETWORK` selects; PRAEST has no unlocked-CLI alternative today |
 | `GENLAYER_DECISION_OUTBOX_ADDRESS` | E | yes | no | output of `npm run genlayer:deploy` |
 | `GENLAYER_SERVICE_ASSURANCE_RESOLVER_ADDRESS` / `_AGENT_AGREEMENT_RESOLVER_ADDRESS` / `_EVENT_RESOLVER_ADDRESS` / `_DISPUTE_RESOLVER_ADDRESS` | E | yes | no | same deploy output — these 4 are the ones `resolverAddress()` actually reads |
 | `GENLAYER_AGREEMENT_REGISTRY_ADDRESS` / `_EVIDENCE_ASSESSOR_ADDRESS` / `_SETTLEMENT_ENTITLEMENT_ADDRESS` / `_LIABILITY_RESOLVER_ADDRESS` | E | not yet wired | no | deployed contracts exist (`AgreementRegistry.py` etc.) but nothing in `apps/api` reads these 4 addresses yet — a real gap, not fixed this pass (see report) |
