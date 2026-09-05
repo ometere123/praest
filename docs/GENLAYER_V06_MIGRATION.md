@@ -71,10 +71,10 @@ It also cannot load the SDK bundle for the corrected runner pin locally
 predates the runner and can't be used to validate against it either way.
 
 **A live semantic call proves the tooling warning is a version-lag false positive, not a contract
-defect.** Two independent live tests against `studioDevnet` (chain `61997`,
-`https://studio-dev.genlayer.com/api`), both forcing genuine `gl.nondet.web.render` +
-`gl.nondet.exec_prompt` execution inside `leader_fn` (a real `https://` URL in the agreement, not
-a bypass), both reached `FINALIZED` / `FINISHED_WITH_RETURN`:
+defect.** All 6 contracts using `gl.vm.run_nondet_default` were exercised live against
+`studioDevnet` (chain `61997`, `https://studio-dev.genlayer.com/api`), each forcing genuine
+`gl.nondet.web.render` + `gl.nondet.exec_prompt` execution inside `leader_fn` (a real `https://`
+URL in the agreement, not a bypass). All 6 reached `FINALIZED` / `FINISHED_WITH_RETURN`:
 
 1. **`ServiceAssuranceResolver`** (`0xAB67b705917Bb275af830d5015FF20aD5C2558ca`) - call tx
    `0x1d3f14c1d3060c675ee33a99d518c4445668f662fd0c3ae8cff44c6f20f1c830`. Result:
@@ -86,28 +86,43 @@ a bypass), both reached `FINALIZED` / `FINISHED_WITH_RETURN`:
    `{"outcome":"undetermined","reason_code":"INSUFFICIENT_EVIDENCE","liability":[],...}` - correctly
    declined to fabricate a liability allocation when the fetched evidence showed no actual outage,
    exactly the "don't guess" behavior `_normalize_liability` was designed for.
+3. **`DisputeResolver`** (`0xDB21697e97a9A5b8b44A9F9FAFc6c116e6f744aA`) - call tx
+   `0x3344b36b2327d52d2558aac9c927bb02bd2bde6e8a0f6323de6d849bd876a6d8`. Result:
+   `{"outcome":"undetermined","reason_code":"INSUFFICIENT_EVIDENCE",...}`.
+4. **`AgentAgreementResolver`** (`0x1D92a75A61EdE76BE75F42d72B00A5C993C0600E`) - call tx
+   `0x336b98442880e811f2e1f4de9856fb674a4e87341f3557d74d4a5fbb6a70440e`. Result:
+   `{"outcome":"undetermined","reason_code":"INSUFFICIENT_EVIDENCE",...}` - reasoning correctly
+   noted the empty task spec and treated the agent's self-report as an unverified allegation.
+5. **`EventResolver`** (`0x9FD22e352ddc75Aa1B88f2cb7F75C2D6Ab55551f`) - call tx
+   `0x8cabe3d7e2f50af5b9a1d386215d7dc46e833cd5f3ca14a5d01120a868a4effc`. Result:
+   `{"outcome":"fulfilled","reason_code":"SITE_ONLINE","remedy_bps":10000,...}` - correctly resolved
+   the binary factual claim and applied the full-remedy default for a `fulfilled` event.
+6. **`EvidenceAssessor`** (`0xcd007f5352C8aD38fbAeCf3E301c694b385f0b61`, via `assess()`/
+   `get_assessment()` rather than `resolve()`) - call tx
+   `0x1ab048a45b46a53c2e8a27543face5ff1ac55203c45f585383ee25bfb7d56339`. Result:
+   `{"sufficient":false,"conflicts":false,"reason_code":"INSUFFICIENT_EVIDENCE"}`.
 
 **Classification**: local tooling lag - installed `genvm-lint` (`0.11.0`) does not yet recognize
 `run_nondet_default` as the current v0.3 equivalence boundary, while the pinned studio-dev runner
-executes it successfully. `run_nondet_default` was not removed or replaced to silence this
-warning - the pre-deploy pin correction was the only change made, and the same warning persisted
-with the corrected pin (confirming it's the linter, not the pin, that's stale).
+executes it successfully across all 6 contracts that use it. `run_nondet_default` was not removed
+or replaced to silence this warning - the pre-deploy pin correction was the only change made, and
+the same warning persisted with the corrected pin (confirming it's the linter, not the pin, that's
+stale).
 
-All 9 contracts are deployed to `studioDevnet` - see `deployments/studioDevnet.json`. Deploy +
-finalize alone (no lint warning applies) is treated as sufficient proof for the 3 contracts with
-no `nondet` calls (`AgreementRegistry`, `SettlementEntitlement`, `DecisionOutbox`); the 6
-`run_nondet_default` users are covered by the two live semantic calls above plus successful
-deploy+finalize for the remaining four (`DisputeResolver`, `AgentAgreementResolver`,
-`EventResolver`, `EvidenceAssessor`) - those four have not yet had a live semantic call exercising
-their specific prompts, only a successful deploy.
+All 9 contracts are deployed to `studioDevnet` and have live proof - see
+`deployments/studioDevnet.json` for addresses/tx hashes. The 3 contracts with no `nondet` calls
+(`AgreementRegistry`, `SettlementEntitlement`, `DecisionOutbox`) are proven by successful
+deploy+finalize (no lint warning applies to them); all 6 `run_nondet_default` users now have a
+live semantic call exercising their actual prompt/validator logic, not just a deploy.
 
 ## What's still open
 
 - **`client.advanced.getTransactionLifecycle()` in `LifecycleService.finalize()`**: now wired
   (`apps/api/src/genlayer.ts`'s `getLifecycle()` + `resolutionAction === "Finalize"` gate in
   `apps/api/src/lifecycle.ts`) - no longer open.
-- **Live semantic proof for `DisputeResolver`, `AgentAgreementResolver`, `EventResolver`,
-  `EvidenceAssessor`**: deployed and reachable, but not yet exercised with a real `nondet` call the
-  way `ServiceAssuranceResolver` and `LiabilityResolver` were.
+- **Live semantic proof for all 6 `run_nondet_default` contracts**: done - no longer open.
 - **`docs/DEPLOYMENT.md`/`docs/ENVIRONMENT.md`**: still reference the old `studionet` addresses in
   places - need a pass to point at `deployments/studioDevnet.json` and `GENLAYER_NETWORK`.
+- **`.env.local` GenLayer contract address variables**: still need updating to the new
+  `studioDevnet` addresses in `deployments/studioDevnet.json` (the old `studionet` addresses
+  won't resolve on this network).
