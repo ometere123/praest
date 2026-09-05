@@ -19,6 +19,11 @@ const client=createClient({chain,account} as any);
 const outPath=`deployments/${networkName}.json`;
 let deployment:any={network:networkName,rpc:chain.rpcUrls.default.http[0],deployedAt:new Date().toISOString(),contracts:{}};
 if(existsSync(outPath)){try{const existing=JSON.parse(await readFile(outPath,'utf8'));deployment.contracts=existing.contracts||{};}catch{}}
+await mkdir('deployments',{recursive:true});
+// Write after EVERY contract, not just once at the end - a mid-batch failure (e.g. a transient
+// RPC error on contract N of a multi-contract run) must not lose the on-chain, fee-paid
+// deployments of contracts 1..N-1 that already succeeded.
+async function persist(){deployment.deployedAt=new Date().toISOString();await writeFile(outPath,JSON.stringify(deployment,null,2));}
 for(const name of names){
  const code=await readFile(path.join('contracts/genlayer',`${name}.py`),'utf8');
  console.log(`deploying ${name}...`);
@@ -26,12 +31,14 @@ for(const name of names){
  // returned distribution/feeValue unchanged (never invent fee numbers).
  const estimate:any=await (client as any).estimateTransactionFees();
  const tx=await (client as any).deployContract({account,code,args:[],fees:{distribution:estimate.distribution,feeValue:estimate.feeValue}});
+ deployment.contracts[name]={txHash:tx,address:null};
+ await persist(); // record the tx immediately - a fee has already been spent at this point
  const receipt:any=await (client as any).waitForTransactionReceipt({hash:tx,waitUntil:'finalized',fullTransaction:true});
  const address=receipt?.contractAddress||receipt?.data?.contractAddress||receipt?.decodedData?.contractAddress||receipt?.data?.decodedData?.contractAddress||receipt?.consensus_data?.contract_address||receipt?.txDataDecoded?.contractAddress;
  if(!address)console.warn(`${name}: deployed tx ${tx}; address was not exposed in the known receipt fields. Run scripts/resolve-genlayer-addresses.ts afterward.`);
  deployment.contracts[name]={txHash:tx,address:address||null};
+ await persist();
+ console.log(`wrote ${outPath} (${name})`);
 }
-deployment.deployedAt=new Date().toISOString();
-await mkdir('deployments',{recursive:true});await writeFile(outPath,JSON.stringify(deployment,null,2));console.log(`wrote ${outPath} (${names.join(', ')})`);
 }
 main().catch(err=>{console.error(err);process.exit(1)});

@@ -1,0 +1,43 @@
+{
+  "network": "studioDevnet",
+  "rpc": "https://studio-dev.genlayer.com/api",
+  "deployedAt": "2026-09-05T09:59:55.936Z",
+  "contracts": {
+    "AgreementRegistry": {
+      "txHash": "0x2560aacd3385522686536182eb61058080778629fbf96a2448c16de468795f4f",
+      "address": "0x8E5fd5260568Db6b455e146536270D4367C634b4"
+    },
+    "ServiceAssuranceResolver": {
+      "txHash": "0xee54fcf1404a30e765b90849a18aa65eb479efbf2df5629a691590cc9e3fbb5f",
+      "address": "0xAB67b705917Bb275af830d5015FF20aD5C2558ca"
+    },
+    "DisputeResolver": {
+      "txHash": "0xa49464a644e1aff4bdbbdaf653260aa22a06db7c695cb5435fcaad4b29ca55c9",
+      "address": "0xDB21697e97a9A5b8b44A9F9FAFc6c116e6f744aA"
+    },
+    "AgentAgreementResolver": {
+      "txHash": "0x55b40c1eb84df73d7adaec0c5ecfd3f4e44d49ce7504540872a71b0c65e0b8f9",
+      "address": "0x1D92a75A61EdE76BE75F42d72B00A5C993C0600E"
+    },
+    "LiabilityResolver": {
+      "txHash": "0xc5b5efb39f6a89b462a300bec1df189176c28912081290dcec6a5d98a0443b5e",
+      "address": "0xEFA69e324Eaba9F49B4C597B50783d56eCd58891"
+    },
+    "EventResolver": {
+      "txHash": "0xeceb5010bf08674d99a86bf60e15fd9826e415d2921bc0d45c2c3e68ab2ba371",
+      "address": "0x9FD22e352ddc75Aa1B88f2cb7F75C2D6Ab55551f"
+    },
+    "EvidenceAssessor": {
+      "txHash": "0x382d445d4e81314de39f4065a66ff67fe50e28579f673860186a8ec51c52230f",
+      "address": "0xcd007f5352C8aD38fbAeCf3E301c694b385f0b61"
+    },
+    "SettlementEntitlement": {
+      "txHash": "0x00a315a72d63986f1c8cccbab34daa3108e5552ec68b6f1715398bc99ec23765",
+      "address": "0xf0ef6754D1Cd691d728c957091F2e3C8EE742f56"
+    },
+    "DecisionOutbox": {
+      "txHash": "0x4a40def26b46467e555781fd682c2be5311a8feeda5250e6fda4746ae56ceb83",
+      "address": "0xb00F81C8b08d09F921FBA4A108e1343Afd9Daaec"
+    }
+  }
+}
