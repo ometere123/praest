@@ -8,4 +8,4 @@ def test_all_contracts_pin_runner():
     for p in Path(__file__).parent.glob("*.py"):
         if p.name.startswith("test_"): continue
         head = "\n".join(p.read_text().splitlines()[:2])
-        assert "py-genlayer:9b8kjyda2ycxyq4ea6g4yfpnydxhd52gqba5rb8dw7krkh5mn9p0" in head
+        assert "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng" in head
