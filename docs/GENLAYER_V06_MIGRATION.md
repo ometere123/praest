@@ -52,19 +52,62 @@ wire-protocol-family selector, not a network identity claim. `chain_type: studio
 `id`/`url` overrides is what actually targets studio-dev; `default: studioDevnet` makes it the
 default network for `gltest run`.
 
+## Corrected runner pin
+
+The pin `9b8kjyda2y...` (pulled from `genlayerlabs/genlayer-studio`'s main-branch example
+contracts) turned out to be a different, unrelated `py-genlayer` build - not what studio-dev
+actually expects. The correct pin, confirmed by the user from GenLayer's own docs, is:
+`py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng`. All 9 contracts and
+`test_contracts.py`'s pin-check use this corrected value.
+
+## Live proof: `run_nondet_default` works on the pinned studio-dev runner (2026-09-05)
+
+Local `genvm-lint` (version `0.11.0`) flags every contract using `gl.vm.run_nondet_default` with:
+```
+gl.nondet.* call in '<Contract>._resolve.<locals>.leader_fn' not reachable from equivalence principle block
+```
+It also cannot load the SDK bundle for the corrected runner pin locally
+(`Failed to load SDK: "filename 'runners/py-genlayer/5j/ycge4q8k23...tar' not found"`), which
+predates the runner and can't be used to validate against it either way.
+
+**A live semantic call proves the tooling warning is a version-lag false positive, not a contract
+defect.** Two independent live tests against `studioDevnet` (chain `61997`,
+`https://studio-dev.genlayer.com/api`), both forcing genuine `gl.nondet.web.render` +
+`gl.nondet.exec_prompt` execution inside `leader_fn` (a real `https://` URL in the agreement, not
+a bypass), both reached `FINALIZED` / `FINISHED_WITH_RETURN`:
+
+1. **`ServiceAssuranceResolver`** (`0xAB67b705917Bb275af830d5015FF20aD5C2558ca`) - call tx
+   `0x1d3f14c1d3060c675ee33a99d518c4445668f662fd0c3ae8cff44c6f20f1c830`. Result:
+   `{"outcome":"fulfilled","reason_code":"SERVICE_REACHABLE_NORMAL_RESPONSE","remedy_bps":0,...}`.
+   Fee deposited `621204000010352`, refunded `541272500009529` at finalization.
+2. **`LiabilityResolver`** (`0xEFA69e324Eaba9F49B4C597B50783d56eCd58891`, the structurally most
+   complex validator - custom `_liability_matches` array comparison) - call tx
+   `0xd3a3aaf0b666a130c39ffe9927d2566c294287a379c0430ff85170fb24fd6be2`. Result:
+   `{"outcome":"undetermined","reason_code":"INSUFFICIENT_EVIDENCE","liability":[],...}` - correctly
+   declined to fabricate a liability allocation when the fetched evidence showed no actual outage,
+   exactly the "don't guess" behavior `_normalize_liability` was designed for.
+
+**Classification**: local tooling lag - installed `genvm-lint` (`0.11.0`) does not yet recognize
+`run_nondet_default` as the current v0.3 equivalence boundary, while the pinned studio-dev runner
+executes it successfully. `run_nondet_default` was not removed or replaced to silence this
+warning - the pre-deploy pin correction was the only change made, and the same warning persisted
+with the corrected pin (confirming it's the linter, not the pin, that's stale).
+
+All 9 contracts are deployed to `studioDevnet` - see `deployments/studioDevnet.json`. Deploy +
+finalize alone (no lint warning applies) is treated as sufficient proof for the 3 contracts with
+no `nondet` calls (`AgreementRegistry`, `SettlementEntitlement`, `DecisionOutbox`); the 6
+`run_nondet_default` users are covered by the two live semantic calls above plus successful
+deploy+finalize for the remaining four (`DisputeResolver`, `AgentAgreementResolver`,
+`EventResolver`, `EvidenceAssessor`) - those four have not yet had a live semantic call exercising
+their specific prompts, only a successful deploy.
+
 ## What's still open
 
-- **`client.advanced.getTransactionLifecycle()`** (the v0.6 protocol lifecycle projection -
-  `resolutionAction === "Finalize"` as the authoritative finalize gate) exists in the
-  `genlayer-js@2.0.0-rc.1` types but isn't yet wired into `LifecycleService.finalize()` in
-  `apps/api/src/lifecycle.ts`, which still uses a best-effort try/catch around `finalize()`. This
-  is a real, disclosed gap - the try/catch is safe (never falsely reports success) but not as
-  precise as the lifecycle read would be.
-- **Redeployment**: the 9 contracts need fresh deployment to `studioDevnet` -
-  `deployments/studionet.json` addresses are for the old network and won't resolve on studio-dev.
-  `scripts/deploy-genlayer.ts` writes to `deployments/<network>.json`, so a studio-dev deploy
-  produces `deployments/studioDevnet.json` without touching the old file.
-- **Local `genvm-lint` validation**: this session's cached tool can't fetch the new runner bundle
-  (`9b8kjyda2y...`) to validate contracts locally against it. The contracts are correct against
-  live official examples fetched from the vendor's own repo, but haven't been lint-verified
-  locally - real validation happens at actual studio-dev deploy time.
+- **`client.advanced.getTransactionLifecycle()` in `LifecycleService.finalize()`**: now wired
+  (`apps/api/src/genlayer.ts`'s `getLifecycle()` + `resolutionAction === "Finalize"` gate in
+  `apps/api/src/lifecycle.ts`) - no longer open.
+- **Live semantic proof for `DisputeResolver`, `AgentAgreementResolver`, `EventResolver`,
+  `EvidenceAssessor`**: deployed and reachable, but not yet exercised with a real `nondet` call the
+  way `ServiceAssuranceResolver` and `LiabilityResolver` were.
+- **`docs/DEPLOYMENT.md`/`docs/ENVIRONMENT.md`**: still reference the old `studionet` addresses in
+  places - need a pass to point at `deployments/studioDevnet.json` and `GENLAYER_NETWORK`.
