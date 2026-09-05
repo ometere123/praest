@@ -8,7 +8,7 @@ crate-type = ["cdylib","lib"]
 no-entrypoint = []
 [dependencies]
 borsh = { version = "1.5", features = ["derive"] }
-solana-program = "=3.0.0"
+solana-program = "=4.1.0"
 solana-system-interface = { version = "=2.0.0", features = ["bincode"] }
 spl-associated-token-account = { version = "8.0", features = ["no-entrypoint"] }
 spl-token = { version = "9.0", features = ["no-entrypoint"] }

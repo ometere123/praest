@@ -1391,7 +1391,7 @@ dependencies = [
  "hyperlane-sealevel-mailbox",
  "hyperlane-sealevel-message-recipient-interface",
  "serializable-account-meta",
- "solana-program 3.0.0",
+ "solana-program 4.1.0",
  "solana-system-interface 2.0.0",
  "spl-associated-token-account",
  "spl-token",
@@ -1886,6 +1886,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "solana-big-mod-exp"
+version = "4.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f05789c4afc39164132db9dcc117218d412ca1f1271d2c629fc6f554c19e5a44"
+dependencies = [
+ "num-bigint",
+ "solana-define-syscall 5.2.0",
+]
+
+[[package]]
 name = "solana-bincode"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2172,6 +2182,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "solana-example-mocks"
+version = "4.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0eb265ff95e28eceda117e2e3d2d2a611ecbbfe911dfeeeecd1521814540ffab"
+dependencies = [
+ "serde",
+ "serde_derive",
+ "solana-hash 4.6.0",
+ "solana-instruction 3.5.0",
+ "solana-nonce 3.3.0",
+ "solana-pubkey 4.3.0",
+ "solana-sdk-ids 3.1.0",
+ "solana-system-interface 3.3.0",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "solana-feature-gate-interface"
 version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2332,6 +2359,23 @@ name = "solana-instructions-sysvar"
 version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e0732294560e88ecdb2bbc656e67383e9f88c78ec09469cef172f0d28cd1bcd"
+dependencies = [
+ "bitflags",
+ "solana-account-info 3.1.1",
+ "solana-instruction 3.5.0",
+ "solana-instruction-error",
+ "solana-program-error 3.0.1",
+ "solana-sanitize 3.0.1",
+ "solana-sdk-ids 3.1.0",
+ "solana-serialize-utils 3.1.2",
+ "solana-sysvar-id 3.1.0",
+]
+
+[[package]]
+name = "solana-instructions-sysvar"
+version = "4.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e38363a181313d607f7a118df2b401bb27b477a0104b09283cbf504f5f0f00cc"
 dependencies = [
  "bitflags",
  "solana-account-info 3.1.1",
@@ -2672,6 +2716,52 @@ dependencies = [
 ]
 
 [[package]]
+name = "solana-program"
+version = "4.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c9f2e1b36b5f1c407cff098a383a45890268e848481af32540064986e7397a6"
+dependencies = [
+ "solana-account-info 3.1.1",
+ "solana-big-mod-exp 4.0.0",
+ "solana-blake3-hasher 3.1.0",
+ "solana-borsh 3.0.2",
+ "solana-clock 3.2.0",
+ "solana-cpi 3.1.0",
+ "solana-define-syscall 5.2.0",
+ "solana-epoch-rewards 3.2.0",
+ "solana-epoch-schedule 3.3.0",
+ "solana-epoch-stake",
+ "solana-example-mocks 4.0.0",
+ "solana-fee-calculator 3.3.0",
+ "solana-hash 4.6.0",
+ "solana-instruction 3.5.0",
+ "solana-instruction-error",
+ "solana-instructions-sysvar 4.0.0",
+ "solana-keccak-hasher 3.1.0",
+ "solana-last-restart-slot 3.2.0",
+ "solana-msg 3.1.0",
+ "solana-native-token 3.0.0",
+ "solana-program-entrypoint 3.1.1",
+ "solana-program-error 3.0.1",
+ "solana-program-memory 3.1.0",
+ "solana-program-option 3.1.0",
+ "solana-program-pack 3.1.0",
+ "solana-pubkey 4.3.0",
+ "solana-rent 4.4.0",
+ "solana-sdk-ids 3.1.0",
+ "solana-secp256k1-recover 3.3.0",
+ "solana-serde-varint 3.0.1",
+ "solana-serialize-utils 3.1.2",
+ "solana-sha256-hasher 3.1.0",
+ "solana-short-vec 3.3.0",
+ "solana-slot-hashes 3.2.0",
+ "solana-slot-history 3.2.0",
+ "solana-stable-layout 3.0.1",
+ "solana-sysvar 4.3.0",
+ "solana-sysvar-id 3.1.0",
+]
+
+[[package]]
 name = "solana-program-entrypoint"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2835,6 +2925,20 @@ checksum = "e860d5499a705369778647e97d760f7670adfb6fc8419dd3d568deccd46d5487"
 dependencies = [
  "serde",
  "serde_derive",
+ "solana-sdk-ids 3.1.0",
+ "solana-sdk-macro 3.0.1",
+ "solana-sysvar-id 3.1.0",
+]
+
+[[package]]
+name = "solana-rent"
+version = "4.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc016b348926395ba01f8288cdf5da25fc30f5a0806028b32d5e5b3147b10bf9"
+dependencies = [
+ "serde",
+ "serde_derive",
+ "solana-get-sysvar",
  "solana-sdk-ids 3.1.0",
  "solana-sdk-macro 3.0.1",
  "solana-sysvar-id 3.1.0",
@@ -3153,6 +3257,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "solana-stake-history"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c814b4e2570f8c343eb1d4f968ff981bdf518afc3643d070d8e5a28158e85a4b"
+dependencies = [
+ "serde",
+ "serde_derive",
+ "solana-clock 3.2.0",
+ "solana-get-sysvar",
+ "solana-sdk-ids 3.1.0",
+ "solana-sysvar-id 3.1.0",
+]
+
+[[package]]
 name = "solana-stake-interface"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3202,6 +3320,18 @@ dependencies = [
  "solana-msg 3.1.0",
  "solana-program-error 3.0.1",
  "solana-pubkey 3.0.0",
+]
+
+[[package]]
+name = "solana-system-interface"
+version = "3.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2e2d5311d0584af231c6c2b0503ba1c3aa50118ead4f503ab215ccbdd1ffac57"
+dependencies = [
+ "num-traits",
+ "solana-address 2.7.0",
+ "solana-msg 3.1.0",
+ "solana-program-error 3.0.1",
 ]
 
 [[package]]
@@ -3272,6 +3402,42 @@ dependencies = [
  "solana-sdk-macro 3.0.1",
  "solana-slot-hashes 3.2.0",
  "solana-slot-history 3.2.0",
+ "solana-sysvar-id 3.1.0",
+]
+
+[[package]]
+name = "solana-sysvar"
+version = "4.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "552f9d54ec9597f5a17469df500a1ac345c262e5a9859938ef5e5541844fdac5"
+dependencies = [
+ "base64 0.22.1",
+ "bincode",
+ "bytemuck",
+ "bytemuck_derive",
+ "lazy_static",
+ "serde",
+ "serde_derive",
+ "solana-account-info 3.1.1",
+ "solana-clock 3.2.0",
+ "solana-define-syscall 5.2.0",
+ "solana-epoch-rewards 3.2.0",
+ "solana-epoch-schedule 3.3.0",
+ "solana-fee-calculator 3.3.0",
+ "solana-get-sysvar",
+ "solana-hash 4.6.0",
+ "solana-instruction 3.5.0",
+ "solana-last-restart-slot 3.2.0",
+ "solana-program-entrypoint 3.1.1",
+ "solana-program-error 3.0.1",
+ "solana-program-memory 3.1.0",
+ "solana-pubkey 4.3.0",
+ "solana-rent 4.4.0",
+ "solana-sdk-ids 3.1.0",
+ "solana-sdk-macro 3.0.1",
+ "solana-slot-hashes 3.2.0",
+ "solana-slot-history 3.2.0",
+ "solana-stake-history",
  "solana-sysvar-id 3.1.0",
 ]
 
