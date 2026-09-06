@@ -1,15 +1,21 @@
 const base = () => process.env.PRAEST_API_URL || "http://localhost:4000";
 
+// Fastify rejects a request that declares content-type: application/json but carries no body
+// ("Body cannot be empty..."), so only declare it when we are actually sending something. The
+// sweep endpoints take no payload.
+function headers(token: string, organizationId?: string, hasBody = false) {
+  const h: Record<string, string> = {"x-praest-internal-token": token};
+  if (hasBody) h["content-type"] = "application/json";
+  if (organizationId) h["x-praest-organization-id"] = organizationId;
+  return h;
+}
+
 async function request(path: string, organizationId: string, method = "POST", body?: any) {
   const token = process.env.PRAEST_INTERNAL_TOKEN;
   if (!token) throw new Error("PRAEST_INTERNAL_TOKEN required");
   const r = await fetch(new URL(`/v1/${path}`, base()), {
     method,
-    headers: {
-      "content-type": "application/json",
-      "x-praest-internal-token": token,
-      "x-praest-organization-id": organizationId,
-    },
+    headers: headers(token, organizationId, body !== undefined),
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const t = await r.text();
@@ -23,7 +29,7 @@ async function requestGlobal(path: string, method = "GET", body?: any) {
   if (!token) throw new Error("PRAEST_INTERNAL_TOKEN required");
   const r = await fetch(new URL(`/v1/${path}`, base()), {
     method,
-    headers: { "content-type": "application/json", "x-praest-internal-token": token },
+    headers: headers(token, undefined, body !== undefined),
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const t = await r.text();
