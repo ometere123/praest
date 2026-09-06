@@ -1,0 +1,21 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "hyperlaneDomain": 11155111,
+  "rpc": "https://ethereum-sepolia-rpc.publicnode.com",
+  "explorer": "https://sepolia.etherscan.io",
+  "role": "cross-chain-dispatch-origin",
+  "roleNote": "Dispatch only. No escrow lives here - all money settles on Base Sepolia, which is the only testnet observed receiving Hyperlane deliveries (see docs/BUILD_PLAN.md).",
+  "deployedAt": "2026-09-07T00:00:00.000Z",
+  "deployer": "0x3EAEd122e4889403669D5D358b9638A450a97a09",
+  "hyperlane": {
+    "mailbox": "0xfFAEF09B3cd11D9b20d1a19bECca54EEC2884766"
+  },
+  "contracts": {
+    "StudioDecisionGateway": {
+      "address": "0x0878eaecB2D7AA4F1929F616E09eCaEf4a63e32e",
+      "txHash": "0xec1f550a2442562ae8197a3a374fe0fb677e2585bdaaade137e1166faef3bd33",
+      "note": "Same address as PraestEscrow on Base Sepolia - identical deployer and nonce on both chains. Different contracts on different chains; do not confuse them."
+    }
+  }
+}

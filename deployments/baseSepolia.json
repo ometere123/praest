@@ -1,0 +1,56 @@
+{
+  "network": "baseSepolia",
+  "chainId": 84532,
+  "hyperlaneDomain": 84532,
+  "rpc": "https://sepolia.base.org",
+  "explorer": "https://sepolia.basescan.org",
+  "role": "settlement-destination",
+  "deployedAt": "2026-09-07T00:00:00.000Z",
+  "deployer": "0x3EAEd122e4889403669D5D358b9638A450a97a09",
+  "hyperlane": {
+    "mailbox": "0x6966b0E55883d49BFB24539356a2f8A673E02039",
+    "ism": "0x2Cc2f83Bb13E7CC98810bca85Ab2e9884bef496A",
+    "ismSource": "read live from Mailbox.defaultIsm() at deploy time, not hardcoded"
+  },
+  "contracts": {
+    "PraestEscrow": {
+      "address": "0x0878eaecB2D7AA4F1929F616E09eCaEf4a63e32e",
+      "txHash": "0xcdaf58bdbed6937aa05c4ec14f46ab6c6f1e10f42fbab23f0be25c324259939f"
+    },
+    "PraestSettlementReceiver": {
+      "address": "0xF5D22B8EB7C9609922Be1c44c59cE9e951F27e3b",
+      "txHash": "0x77d7a091b22f3e7575dc61ab32344c647f251b02374599e3df01b32d74067453",
+      "localDomain": 84532,
+      "trustedOrigin": 11155111,
+      "trustedSender": "0x0000000000000000000000000878eaecb2d7aa4f1929f616e09ecaef4a63e32e",
+      "trustedSenderNote": "StudioDecisionGateway on Ethereum Sepolia, left-padded per PraestWire.address32()"
+    },
+    "PraestTestSettlementToken": {
+      "address": "0x96Bab6Da11c85296802Ae9Ecc5FCFe28e1230f04",
+      "txHash": "0xe64c3c5833933d5897c07bcf3b3db08633d67cda0dea98947345d24b4ceb987a",
+      "symbol": "ptUSD",
+      "decimals": 6,
+      "note": "Explicitly labelled PRAEST test asset. NOT Circle USDC. Real Base Sepolia USDC is 0x036CbD53842c5426634e7929541eC2318f3dCF7e; the escrow is token-agnostic so swapping it in changes only an address."
+    }
+  },
+  "wiring": {
+    "setSettlerTx": "0x947d61a6bf8131a94293c06cb139d4d0a5e48379634aaa92127025113e7e4ca4",
+    "settlerRoleGrantedToReceiver": true,
+    "verifiedOnChain": true
+  },
+  "fundedEscrow": {
+    "escrowId": "0x830799a2bfccd33ce47e13dbb65edef812194db6fe1dee736201db3f6cccd64c",
+    "agreementId": "0x14586c74129b38fc25ff4d09dfa0e939b541ca028e0414c455c9e7cc2f4a6124",
+    "token": "0x96Bab6Da11c85296802Ae9Ecc5FCFe28e1230f04",
+    "payer": "0x3EAEd122e4889403669D5D358b9638A450a97a09",
+    "customer": "0x3EAEd122e4889403669D5D358b9638A450a97a09",
+    "provider": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    "maxCustomerRemedyBps": 2500,
+    "deposited": "1000000000",
+    "remaining": "1000000000",
+    "humanAmount": "1000.000000 ptUSD",
+    "approveTx": "0x1557cde9e25ffcd304ed993eeefc0870782b616e71e24485dcb62e56715f0773",
+    "fundTx": "0xfd36f228617dea85b242abfa7446538d4bf92b17d9a4bee8b87cfc005c03ec99",
+    "escrowTokenBalanceVerified": "1000000000"
+  }
+}

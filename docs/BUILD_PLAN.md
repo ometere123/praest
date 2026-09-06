@@ -185,27 +185,36 @@ Nothing new was built. Everything downstream depended on this.
 **Done when:** `/healthz` returns 200 on the deployed API and an authenticated DB-backed endpoint
 returns 200. Both confirmed.
 
-### Day 2 — Money on chain
-Everything settles on **Base Sepolia**. Ethereum Sepolia gets the dispatch gateway only.
+### Day 2 — Money on chain ✅ COMPLETE (2026-09-07)
+Everything settles on **Base Sepolia**. Ethereum Sepolia carries the dispatch gateway only.
 
-- [ ] `forge build` + `forge test` clean
-- [ ] Deploy `PraestEscrow` → **Base Sepolia**
-- [ ] Deploy `PraestSettlementReceiver` → **Base Sepolia**, constructor args:
-      mailbox `0x6966b0E55883d49BFB24539356a2f8A673E02039`,
-      localDomain `84532`,
-      trustedOrigin `11155111` (Sepolia),
-      trustedSender = the Sepolia gateway address (set after the gateway deploy, via
-      `setTrustedRoute`),
-      ism `0x21176a591be546f40fDf013A80e63dB6b65905da` (the real registry ISM — never a mock,
-      per `AGENTS.md`)
-- [ ] Deploy `StudioDecisionGateway` → **Ethereum Sepolia** (dispatch side only, no escrow there)
-- [ ] `escrow.setSettler(receiver, true)` on Base Sepolia
-- [ ] `receiver.setTrustedRoute(11155111, bytes32(gateway))` once the gateway address exists
-- [ ] Fund one escrow with Base Sepolia USDC `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
-      from the browser wallet
-- [ ] Record addresses into `.env.local` + `deployments/baseSepolia.json`
+- [x] `forge build` clean, **17/17 tests pass**
+- [x] `StudioDecisionGateway` → Sepolia `0x0878eaecB2D7AA4F1929F616E09eCaEf4a63e32e`
+- [x] `PraestEscrow` → Base Sepolia `0x0878eaecB2D7AA4F1929F616E09eCaEf4a63e32e`
+- [x] `PraestSettlementReceiver` → Base Sepolia `0xF5D22B8EB7C9609922Be1c44c59cE9e951F27e3b`
+- [x] ISM `0x2Cc2f83Bb13E7CC98810bca85Ab2e9884bef496A` — read live from `Mailbox.defaultIsm()` at
+      deploy time rather than hardcoded, so it tracks Hyperlane's own configuration. Never a mock.
+- [x] `escrow.setSettler(receiver, true)` — verified on-chain, `hasRole` returns true
+- [x] Escrow funded: **1,000 ptUSD**, 25% remedy cap, provider/customer bound
+- [x] Addresses recorded in `deployments/{baseSepolia,sepolia,evm}.json`, `.env.local`, Railway,
+      and seeded into the `chain_routes` table
+- [x] `PRAEST_HYPERLANE_ORIGIN_DOMAIN` moved from `300` (zkSync) to `11155111` (Sepolia)
 
-**Done when:** `EscrowFunded` is visible on Basescan.
+**Verified on-chain:** receiver reports mailbox `0x6966b0…`, localDomain `84532`, trustedOrigin
+`11155111`, trustedSender = the Sepolia gateway, and the escrow holds `1000000000` of the token.
+
+**Done when:** `EscrowFunded` is visible on Basescan. ✅
+`0xfd36f228617dea85b242abfa7446538d4bf92b17d9a4bee8b87cfc005c03ec99`
+
+**Deviation, recorded:** the deployer holds 0 Circle USDC and that faucet needs a human, so Day 2
+used `PraestTestSettlementToken` (`0x96Bab6Da11c85296802Ae9Ecc5FCFe28e1230f04`, symbol `ptUSD`,
+6 decimals) — an **explicitly labelled** test asset, matching the labelled-test-mint rule
+`AGENTS.md` already applies to Solana settlement. The escrow is token-agnostic, so switching to
+real Base Sepolia USDC (`0x036CbD53842c5426634e7929541eC2318f3dCF7e`) changes one address and
+nothing else. **Get real testnet USDC before Day 7 and re-run one case with it.**
+
+**Bug fixed in passing:** `npm run seed:routes` had never worked — top-level `await` in a file tsx
+resolves as CJS. Rewritten around a `main()`.
 
 ### Day 3 — Bridge wired
 - [ ] `apps/bridge`: poll `DecisionOutbox` → confirm GenLayer FINALIZED **and** a successful

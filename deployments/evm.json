@@ -1,0 +1,18 @@
+{
+  "note": "Consumed by scripts/seed-routes.ts to populate the chain_routes table. Per-chain detail with tx hashes lives in deployments/baseSepolia.json and deployments/sepolia.json.",
+  "deployedAt": "2026-09-07T00:00:00.000Z",
+  "deployer": "0x3EAEd122e4889403669D5D358b9638A450a97a09",
+  "routes": {
+    "basesepolia": {
+      "role": "settlement-destination",
+      "escrow": "0x0878eaecB2D7AA4F1929F616E09eCaEf4a63e32e",
+      "receiver": "0xF5D22B8EB7C9609922Be1c44c59cE9e951F27e3b",
+      "ism": "0x2Cc2f83Bb13E7CC98810bca85Ab2e9884bef496A",
+      "settlementToken": "0x96Bab6Da11c85296802Ae9Ecc5FCFe28e1230f04"
+    },
+    "sepolia": {
+      "role": "transport-origin",
+      "gateway": "0x0878eaecB2D7AA4F1929F616E09eCaEf4a63e32e"
+    }
+  }
+}
