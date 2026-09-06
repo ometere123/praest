@@ -264,6 +264,35 @@ export class LifecycleService {
       .where(eq(settlementInstructions.id, instruction.id));
   }
 
+  /**
+   * Finalizes every adjudication whose appeal window has closed and which has not already produced
+   * a decision. Replaces the Temporal caseLifecycle workflow's timer tail. Per-row failures are
+   * collected rather than thrown so one stuck adjudication cannot block the rest of the sweep -
+   * "collector failure is not service failure" (AGENTS.md).
+   */
+  async finalizeDue() {
+    const now = new Date();
+    const rows = await this.db.select().from(adjudications);
+    const due = rows.filter(
+      (a: any) =>
+        a.genlayerTxHash &&
+        a.appealDeadline &&
+        new Date(a.appealDeadline) <= now &&
+        !["finalized", "undetermined", "failed", "canceled"].includes(a.status),
+    );
+    const finalized: string[] = [];
+    const failed: { id: string; error: string }[] = [];
+    for (const a of due) {
+      try {
+        await this.finalize(a.organizationId, a.id);
+        finalized.push(a.id);
+      } catch (e: any) {
+        failed.push({ id: a.id, error: String(e?.message || e) });
+      }
+    }
+    return { due: due.length, finalized, failed };
+  }
+
   async finalize(org: string, adjId: string) {
     const [adj] = await this.db
       .select()
@@ -403,5 +432,15 @@ export class LifecycleController {
   finalize(@Req() r: any, @Param("id") id: string) {
     if (!hasPermission(r.praestActor, "settlements:write")) throw new ForbiddenException();
     return this.svc.finalize(r.praestActor.organizationId, id);
+  }
+
+  // Cron-friendly replacement for the Temporal caseLifecycle workflow's "sleep until the appeal
+  // deadline, then finalize" tail. Finalizes every adjudication whose appeal window has already
+  // closed; finalize() itself still re-checks the window and the protocol's own finalize-readiness
+  // signal, so calling this early is safe and simply skips. Point a scheduler at it.
+  @Post("internal/adjudications/sweep")
+  sweep(@Req() r: any) {
+    if (r.praestActor?.type !== "internal") throw new ForbiddenException();
+    return this.svc.finalizeDue();
   }
 }

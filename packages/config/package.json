@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./routes": "./src/routes.json",
-    "./chains": "./src/chains.json",
-    "./temporal": "./src/temporal.ts",
-    ".": "./src/index.ts"
+    "./routes": "./dist/routes.json",
+    "./chains": "./dist/chains.json",
+    "./temporal": "./dist/temporal.js",
+    ".": "./dist/index.js"
   },
+  "types": "./dist/index.d.ts",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.json",
