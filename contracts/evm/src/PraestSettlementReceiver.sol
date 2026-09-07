@@ -9,6 +9,11 @@ import {PraestEscrow} from "./PraestEscrow.sol";
 
 /// @notice Hyperlane recipient for finalized PRAEST settlement instructions.
 contract PraestSettlementReceiver is AccessControl, Pausable {
+    /// @notice Authorises the same-chain settlement path, where no Hyperlane message exists to
+    /// authenticate. Held by PRAEST's bridge key. Every instruction-level check still applies -
+    /// only the transport checks (mailbox/origin/sender) are replaced by this role.
+    bytes32 public constant DIRECT_SETTLER_ROLE = keccak256("DIRECT_SETTLER_ROLE");
+
     address public immutable mailbox;
     uint32 public immutable localDomain;
     uint32 public trustedOrigin;
@@ -71,7 +76,22 @@ contract PraestSettlementReceiver is AccessControl, Pausable {
         if (msg.sender != mailbox) revert MailboxOnly();
         if (origin != trustedOrigin) revert UnauthorizedOrigin();
         if (sender != trustedSender) revert UnauthorizedSender();
+        _execute(message, origin);
+    }
 
+    /// @notice Same-chain settlement: PRAEST's bridge submits a finalized instruction directly,
+    /// with no Hyperlane message in the path. Used when the decision and the escrow are on the
+    /// same chain, so settlement does not depend on validator or relayer liveness.
+    /// @dev Applies every instruction-level check `handle()` applies - destination, target,
+    /// finality, expiry, replay, and the escrow's own allocation caps. It shares
+    /// `processedInstructions` with `handle()`, so an instruction settled through one path can
+    /// never be replayed through the other. The transport checks are replaced by
+    /// DIRECT_SETTLER_ROLE, and the declared source domain must still be the trusted origin.
+    function settleDirect(bytes calldata message) external onlyRole(DIRECT_SETTLER_ROLE) whenNotPaused {
+        _execute(message, trustedOrigin);
+    }
+
+    function _execute(bytes calldata message, uint32 origin) internal {
         PraestWire.Instruction memory x = PraestWire.decode(message);
         if (x.sourceDomain != origin) revert UnauthorizedOrigin();
         if (x.destinationDomain != localDomain) revert WrongDestination();

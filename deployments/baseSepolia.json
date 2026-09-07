@@ -18,12 +18,14 @@
       "txHash": "0xcdaf58bdbed6937aa05c4ec14f46ab6c6f1e10f42fbab23f0be25c324259939f"
     },
     "PraestSettlementReceiver": {
-      "address": "0xF5D22B8EB7C9609922Be1c44c59cE9e951F27e3b",
-      "txHash": "0x77d7a091b22f3e7575dc61ab32344c647f251b02374599e3df01b32d74067453",
+      "address": "0x04583fA43177D28D3408bF81D65a4dF7e5e70CC0",
+      "supersedes": "0xF5D22B8EB7C9609922Be1c44c59cE9e951F27e3b",
+      "supersededReason": "redeployed with settleDirect() for the same-chain path; escrow and its funded state untouched",
       "localDomain": 84532,
       "trustedOrigin": 11155111,
       "trustedSender": "0x0000000000000000000000000878eaecb2d7aa4f1929f616e09ecaef4a63e32e",
-      "trustedSenderNote": "StudioDecisionGateway on Ethereum Sepolia, left-padded per PraestWire.address32()"
+      "directSettler": "0xDfa6Fb3a2Cefee2Dd59a5E0569c2c960Bf0c78c6",
+      "settlementMode": "direct"
     },
     "PraestTestSettlementToken": {
       "address": "0x96Bab6Da11c85296802Ae9Ecc5FCFe28e1230f04",
@@ -52,5 +54,24 @@
     "approveTx": "0x1557cde9e25ffcd304ed993eeefc0870782b616e71e24485dcb62e56715f0773",
     "fundTx": "0xfd36f228617dea85b242abfa7446538d4bf92b17d9a4bee8b87cfc005c03ec99",
     "escrowTokenBalanceVerified": "1000000000"
+  },
+  "settlementProof": {
+    "path": "same-chain direct (no Hyperlane message, no validators, no relayer)",
+    "instructionId": "0xc50d967ec7cbca3d18ee520ae4b219829161059f95d161123af1d359d8b086bd",
+    "decisionHash": "0x172968f91c8e17ab269dc84be62606c12b2af6339eb850488b0ffce5a32ffe7f",
+    "settleTxHash": "0x74f06527db32313ee90880de1708e405062e9767ccb1878fffda3c8e6ac122b6",
+    "block": 46487410,
+    "gasUsed": 187707,
+    "totalReleased": "1000000000",
+    "remainingAfter": "0",
+    "customerReceived": "250000000",
+    "providerReceived": "750000000",
+    "remedyCapBps": 2500,
+    "remedyCapNote": "customer got exactly 25% - the cap the agreement bound at funding time",
+    "replayRefused": true,
+    "verifiedBalances": {
+      "provider": "750000000",
+      "escrow": "0"
+    }
   }
 }

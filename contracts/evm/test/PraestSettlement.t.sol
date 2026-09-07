@@ -40,6 +40,64 @@ contract PraestSettlementTest is Test {
         r.handle(origin, sender, p); assertEq(t.balanceOf(customer), 250_000);
         vm.expectRevert(PraestSettlementReceiver.Replay.selector); r.handle(origin, sender, p);
     }
+    // --- same-chain direct settlement path (no Hyperlane message) ---
+
+    function test_direct_settle_requires_role() public {
+        bytes memory p = payload(bytes32(uint256(21)), uint64(block.timestamp + 100), local, bytes32(uint256(uint160(address(r)))), customer, 1_000);
+        vm.prank(address(0xDEAD));
+        vm.expectRevert();
+        r.settleDirect(p);
+    }
+
+    function test_direct_settle_pays_out_when_authorized() public {
+        address bridge = address(0xB41D6E);
+        r.grantRole(r.DIRECT_SETTLER_ROLE(), bridge);
+        bytes memory p = payload(bytes32(uint256(22)), uint64(block.timestamp + 100), local, bytes32(uint256(uint160(address(r)))), customer, 300_000);
+        vm.prank(bridge);
+        r.settleDirect(p);
+        assertEq(t.balanceOf(customer), 300_000);
+    }
+
+    /// An instruction settled on the direct path must not be replayable through Hyperlane, or
+    /// vice versa - both paths share processedInstructions.
+    function test_direct_and_hyperlane_share_replay_protection() public {
+        address bridge = address(0xB41D6E);
+        r.grantRole(r.DIRECT_SETTLER_ROLE(), bridge);
+        bytes32 id = bytes32(uint256(23));
+        bytes memory p = payload(id, uint64(block.timestamp + 100), local, bytes32(uint256(uint160(address(r)))), customer, 100_000);
+
+        vm.prank(bridge);
+        r.settleDirect(p);
+        assertEq(t.balanceOf(customer), 100_000);
+
+        vm.expectRevert(PraestSettlementReceiver.Replay.selector);
+        r.handle(origin, sender, p);
+
+        vm.prank(bridge);
+        vm.expectRevert(PraestSettlementReceiver.Replay.selector);
+        r.settleDirect(p);
+    }
+
+    /// The direct path skips transport checks but keeps every instruction check, including the
+    /// escrow's remedy cap.
+    function test_direct_settle_still_enforces_remedy_cap() public {
+        address bridge = address(0xB41D6E);
+        r.grantRole(r.DIRECT_SETTLER_ROLE(), bridge);
+        bytes memory p = payload(bytes32(uint256(24)), uint64(block.timestamp + 100), local, bytes32(uint256(uint160(address(r)))), customer, 900_000);
+        vm.prank(bridge);
+        vm.expectRevert(PraestEscrow.PolicyMismatch.selector);
+        r.settleDirect(p);
+    }
+
+    function test_direct_settle_rejects_wrong_destination() public {
+        address bridge = address(0xB41D6E);
+        r.grantRole(r.DIRECT_SETTLER_ROLE(), bridge);
+        bytes memory p = payload(bytes32(uint256(25)), uint64(block.timestamp + 100), 999, bytes32(uint256(uint160(address(r)))), customer, 1_000);
+        vm.prank(bridge);
+        vm.expectRevert(PraestSettlementReceiver.WrongDestination.selector);
+        r.settleDirect(p);
+    }
+
     function test_wrong_origin() public { vm.expectRevert(PraestSettlementReceiver.UnauthorizedOrigin.selector); r.handle(301, sender, payload(bytes32(uint256(9)), uint64(block.timestamp+100), local, bytes32(uint256(uint160(address(r)))), customer, 1)); }
     function test_wrong_sender() public { vm.expectRevert(PraestSettlementReceiver.UnauthorizedSender.selector); r.handle(origin, bytes32(uint256(99)), payload(bytes32(uint256(9)), uint64(block.timestamp+100), local, bytes32(uint256(uint160(address(r)))), customer, 1)); }
     function test_expired() public { vm.expectRevert(PraestSettlementReceiver.Expired.selector); r.handle(origin, sender, payload(bytes32(uint256(9)), uint64(block.timestamp-1), local, bytes32(uint256(uint160(address(r)))), customer, 1)); }

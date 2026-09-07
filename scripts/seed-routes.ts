@@ -32,6 +32,10 @@ async function main() {
           role: d.role || c.role,
           gateway: d.gateway || null,
           settlementToken: d.settlementToken || null,
+          // "direct" settles straight to the receiver with no Hyperlane message; "hyperlane"
+          // routes through the Mailbox and its ISM. The bridge reads this rather than inferring a
+          // transport, so a misconfigured route fails loudly instead of silently picking one.
+          settlementMode: d.settlementMode || null,
           source: "hyperlane-registry",
           seededAt: new Date().toISOString(),
         },
