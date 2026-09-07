@@ -1,11 +1,11 @@
 {
   "network": "studioDevnet",
   "rpc": "https://studio-dev.genlayer.com/api",
-  "deployedAt": "2026-09-05T09:59:55.936Z",
+  "deployedAt": "2026-09-07T05:57:39.873Z",
   "contracts": {
     "AgreementRegistry": {
-      "txHash": "0x2560aacd3385522686536182eb61058080778629fbf96a2448c16de468795f4f",
-      "address": "0x8E5fd5260568Db6b455e146536270D4367C634b4"
+      "txHash": "0xd8299a89d81691b3fb1fa03702ab23a7601fa2a22ee6220eadcc15fb69b34719",
+      "address": "0x32e566AC403428E063bF9E567cbF03215667052E"
     },
     "ServiceAssuranceResolver": {
       "txHash": "0xee54fcf1404a30e765b90849a18aa65eb479efbf2df5629a691590cc9e3fbb5f",
