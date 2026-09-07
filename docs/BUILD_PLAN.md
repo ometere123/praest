@@ -216,17 +216,40 @@ nothing else. **Get real testnet USDC before Day 7 and re-run one case with it.*
 **Bug fixed in passing:** `npm run seed:routes` had never worked — top-level `await` in a file tsx
 resolves as CJS. Rewritten around a `main()`.
 
-### Day 3 — Bridge wired
-- [ ] `apps/bridge`: poll `DecisionOutbox` → confirm GenLayer FINALIZED **and** a successful
-      execution result (`FINISHED_WITH_RETURN`) → build instruction → dispatch
-- [ ] Same-chain path: dispatch directly to the Base Sepolia receiver — no Hyperlane message
-- [ ] Idempotency: an already-dispatched `instructionId` is never sent twice
-- [ ] Track the four states separately in `hyperlane_messages`, never collapsed into one flag:
-      `DISPATCHED` → `DELIVERED` → `PROCESSED` → `SETTLED`.
-      Dispatched is not delivered; delivered is not settled.
-- [ ] Dispatch one hand-built instruction end to end
+### Day 3 — Bridge wired ✅ COMPLETE (2026-09-07)
 
-**Done when:** `EscrowSettled` fires on Base Sepolia from a bridge-dispatched instruction.
+- [x] `apps/bridge` no longer hardcodes zkSync: `sourceDomain` comes from
+      `PRAEST_HYPERLANE_ORIGIN_DOMAIN`, the origin RPC resolves from the origin chain's route, and
+      the gateway from `PRAEST_STUDIO_GATEWAY_ADDRESS`
+- [x] Same-chain path built and proven — no Hyperlane message, no validators, no relayer
+- [x] Idempotency at two layers: the receiver refuses a repeated `instructionId` on-chain, and the
+      bridge reads that before spending gas. A crash between the tx landing and the DB write
+      reconciles instead of resubmitting.
+- [x] Four states tracked separately: `dispatched` → `delivered` → `processed` → `settled`
+- [x] One instruction settled end to end
+
+**Done when:** `EscrowSettled` fires on Base Sepolia. ✅
+`0x74f06527db32313ee90880de1708e405062e9767ccb1878fffda3c8e6ac122b6`
+
+**Design problem found and solved.** `handle()` requires `msg.sender == mailbox`, so same-chain
+settlement could not go through the receiver at all — and calling `escrow.execute()` straight from
+the bridge would have skipped every instruction check. The receiver gained `settleDirect()`, gated
+by `DIRECT_SETTLER_ROLE`, running the identical validation through a shared `_execute()` and
+sharing `processedInstructions` with `handle()`. An instruction settled on one path can never be
+replayed through the other — there is a test for it, and it was confirmed live.
+
+This is why the primary path does not depend on relayer liveness. Hyperlane remains the better
+*trust* story — it moves trust from PRAEST's key to a validator quorum — but it must never be the
+reason a finalized decision cannot pay out. Transport is now explicit per route
+(`metadata.settlementMode`), so a misconfigured route fails loudly instead of quietly choosing the
+weaker path.
+
+**Verified on-chain, not inferred:** provider received exactly `750000000`, escrow drained to `0`,
+customer received `250000000` — exactly the 25% cap the agreement bound at funding time, not a cap
+the decision chose. Replay refused. 22/22 Solidity tests pass.
+
+Receiver redeployed at `0x04583fA43177D28D3408bF81D65a4dF7e5e70CC0` (supersedes
+`0xF5D22B8E…`); the escrow and its funded state were untouched.
 
 ### Day 4 — First full loop closes (service assurance)
 The reference path. Every other resolver reuses this machinery.
