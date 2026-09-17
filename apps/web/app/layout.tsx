@@ -1,7 +1,5 @@
 import "./globals.css";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { AuthKitProvider } from "@workos-inc/authkit-nextjs/components";
-import { withAuth } from "@workos-inc/authkit-nextjs";
 import Providers from "@/components/Providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -25,22 +23,13 @@ export const metadata = {
 const themeInit = `(function(){try{var t=localStorage.getItem('praest-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  let initialAuth: any = undefined;
-  try {
-    const auth = await withAuth();
-    const { accessToken, ...safe } = auth;
-    initialAuth = safe;
-  } catch {}
-
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body>
-        <AuthKitProvider initialAuth={initialAuth}>
-          <Providers>{children}</Providers>
-        </AuthKitProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

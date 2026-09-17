@@ -1,2 +1,25 @@
-export type PraestClientOptions={baseUrl:string;apiKey?:string;accessToken?:string;fetch?:typeof fetch};
-export class PraestClient{private f:typeof fetch;constructor(private o:PraestClientOptions){this.f=o.fetch||fetch}private async req<T>(path:string,init:RequestInit={}){const headers:any={"content-type":"application/json",...(init.headers||{})};if(this.o.apiKey)headers.authorization=`PraestKey ${this.o.apiKey}`;else if(this.o.accessToken)headers.authorization=`Bearer ${this.o.accessToken}`;const r=await this.f(new URL(`/v1/${path}`,this.o.baseUrl),{...init,headers});const t=await r.text();const d=t?JSON.parse(t):null;if(!r.ok)throw new Error(d?.message||`PRAEST ${r.status}`);return d as T}list<T=any>(resource:string){return this.req<T[]>(`resources/${resource}`)}get<T=any>(resource:string,id:string){return this.req<T>(`resources/${resource}/${id}`)}create<T=any>(resource:string,input:any){return this.req<T>(`resources/${resource}`,{method:'POST',body:JSON.stringify(input)})}createAgreement(input:any){return this.req('agreements',{method:'POST',body:JSON.stringify(input)})}createMonitor(input:any){return this.req('monitors',{method:'POST',body:JSON.stringify(input)})}createResolution(input:any){return this.req('resolutions',{method:'POST',body:JSON.stringify(input)})}adjudicate(caseId:string){return this.req(`cases/${caseId}/adjudicate`,{method:'POST'})}startCaseWorkflow(caseId:string){return this.req(`workflows/cases/${caseId}`,{method:'POST'})}appeal(adjudicationId:string,reason:string,value?:string){return this.req(`adjudications/${adjudicationId}/appeal`,{method:'POST',body:JSON.stringify({reason,value})})}finalize(adjudicationId:string){return this.req(`adjudications/${adjudicationId}/finalize`,{method:'POST'})}createEscrow(input:any){return this.req('escrows',{method:'POST',body:JSON.stringify(input)})}createApiKey(name:string,permissions:string[]){return this.req('api-keys',{method:'POST',body:JSON.stringify({name,permissions})})}createWebhook(input:any){return this.req('webhooks',{method:'POST',body:JSON.stringify(input)})}registerX402(input:any){return this.req('x402/requests',{method:'POST',body:JSON.stringify(input)})}verifySettleX402(input:any){return this.req('x402/verify-settle',{method:'POST',body:JSON.stringify(input)})}openX402Assurance(input:any){return this.req('x402/assurance',{method:'POST',body:JSON.stringify(input)})}routes(){return this.req('routes')}receipt(id:string){return this.req(`explorer/receipts/${id}`)}exportToInternetCourt(caseId:string,input:any={}){return this.req(`internet-court/cases/${caseId}/export`,{method:'POST',body:JSON.stringify(input)})}}
+export const STUDIO_DEV = {alias: "studio-dev", chainId: 61997, rpc: "https://studio-dev.genlayer.com/api", explorer: "https://explorer-studio-dev.genlayer.com/"} as const;
+
+export type Provider = {request(args: {method: string; params?: unknown[]}): Promise<any>};
+export type TxTruth = {txId: string; consensus: "ACCEPTED" | "FINALIZED" | "UNDETERMINED" | "CANCELED"; execution: "FINISHED_WITH_RETURN" | "FAILED" | "PENDING" | "UNKNOWN"};
+
+/** Direct browser-wallet surface. No PRAEST API, database, or server-held signer is involved. */
+export class PraestDirectClient {
+  constructor(public readonly provider: Provider, public readonly network = STUDIO_DEV) {}
+  async assertNetwork() {
+    const chainId = await this.provider.request({method: "eth_chainId"});
+    if (Number.parseInt(String(chainId), 16) !== this.network.chainId) throw new Error(`WRONG_NETWORK:${chainId}`);
+  }
+  async accounts(): Promise<string[]> { return this.provider.request({method: "eth_accounts"}); }
+  async estimateFees(): Promise<any> { return this.provider.request({method: "eth_estimateGas", params: [{}]); }
+  async submit(to: string, data: string, value = "0x0"): Promise<string> {
+    await this.assertNetwork();
+    const [from] = await this.accounts();
+    if (!from) throw new Error("WALLET_NOT_CONNECTED");
+    await this.estimateFees();
+    return this.provider.request({method: "eth_sendTransaction", params: [{from, to, data, value}]});
+  }
+  read(to: string, data: string): Promise<string> { return this.provider.request({method: "eth_call", params: [{to, data}, "latest"]}); }
+}
+
+export function applicationSuccess(t: TxTruth): boolean { return (t.consensus === "ACCEPTED" || t.consensus === "FINALIZED") && t.execution === "FINISHED_WITH_RETURN"; }

@@ -1,43 +1,17 @@
 {
-  "generatedAt": "2026-09-03T01:28:53.647Z",
+  "generatedAt": "2026-09-16T21:05:42.672Z",
   "passes": [
     "present README.md",
-    "present docs/ARCHITECTURE.md",
-    "present docs/TRUST_MODEL.md",
-    "present docs/SECURITY.md",
-    "present docs/DEPLOYMENT.md",
-    "present docs/HANDOFF.md",
-    "present docs/IMPLEMENTATION_STATUS.md",
-    "present docs/REQUIREMENTS_TRACEABILITY.md",
-    "present packages/config/src/routes.json",
-    "present packages/config/src/chains.json",
-    "present contracts/genlayer/DecisionOutbox.py",
-    "present contracts/evm/src/PraestSettlementReceiver.sol",
-    "present contracts/solana/src/lib.rs",
-    "present apps/api/src/lifecycle.ts",
-    "present apps/bridge/src/main.ts",
-    "present apps/probe/src/index.ts",
-    "valid JSON package.json",
-    "valid JSON apps/api/package.json",
-    "valid JSON apps/web/package.json",
-    "valid JSON packages/config/src/routes.json",
-    "valid JSON packages/config/src/chains.json",
-    "route manifest 165 URLs",
-    "GenLayer Python syntax",
-    "TypeScript/TSX parser syntax",
-    "dependency-resolved TypeScript typecheck",
-    "Foundry tests"
+    "present contracts/genlayer/PRAESTAgreementVault.py",
+    "present contracts/genlayer/PRAESTAdjudicator.py",
+    "present deployments/agent-tank.json",
+    "present skills/praest/SKILL.md",
+    "focused contract Python syntax",
+    "Studio-dev manifest"
   ],
-  "warnings": [],
-  "failures": [
-    "Solana cargo check failed"
+  "warnings": [
+    "live deployment and dependency-resolved typecheck require network/runtime credentials"
   ],
-  "routeCounts": {
-    "product": 75,
-    "control": 57,
-    "developer": 21,
-    "explorer": 12
-  },
-  "totalRoutes": 165,
-  "fileCount": 338
+  "failures": [],
+  "fileCount": 975
 }

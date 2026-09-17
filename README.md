@@ -1,6 +1,20 @@
 # PRAEST
 
-**Accountability infrastructure for digital services and autonomous commerce.**
+**GenLayer-native accountability for digital services and autonomous commerce.**
+
+PRAEST Agent Tank is a focused, direct-contract runtime: a buyer and provider freeze a versioned agreement, submit bounded evidence, dispute a failure, and ask GenLayer to interpret only the ambiguous point. `ACCEPTED` is provisional; application success requires `FINALIZED` plus `FINISHED_WITH_RETURN`.
+
+## Active Agent Tank runtime
+
+- Network: `studio-dev`, chain `61997`
+- RPC: `https://studio-dev.genlayer.com/api`
+- Contracts: `contracts/genlayer/PRAESTAgreementVault.py` and `contracts/genlayer/PRAESTAdjudicator.py`
+- Deployment manifest: [`deployments/agent-tank.json`](deployments/agent-tank.json)
+- Browser wallet: injected EIP-1193 only; no Privy, WorkOS, backend, database, or server-held signer
+- Agent surfaces: [`packages/sdk-typescript`](packages/sdk-typescript), [`packages/mcp`](packages/mcp), [`skills/praest/SKILL.md`](skills/praest/SKILL.md)
+
+The former full-product architecture is preserved on the archival branch `full-product-pre-agent-tank`; its production roadmap remains in the historical documentation.
+See [`docs/AGENT_TANK_STATUS.md`](docs/AGENT_TANK_STATUS.md) for the exact evidence boundary and remaining external blockers.
 
 PRAEST turns promises into verifiable obligations: define an agreement, attach value, observe delivery, preserve evidence, resolve ambiguous failures through GenLayer, wait for appeal/finality, deliver the finalized decision through Hyperlane, execute settlement locally on the destination chain, and publish a verifiable receipt.
 

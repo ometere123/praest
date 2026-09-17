@@ -1,0 +1,15 @@
+{
+  "network": "studio-dev",
+  "chainId": 61997,
+  "rpc": "https://studio-dev.genlayer.com/api",
+  "explorer": "https://explorer-studio-dev.genlayer.com/",
+  "contracts": {
+    "PRAESTAgreementVault": {
+      "deploymentTx": "0x61405e6140096caaf354f44d824552854496caa8195674136c9e5bc1ef63c909",
+      "address": null
+    }
+  },
+  "sourceCommit": "UNRECORDED",
+  "status": "UNCONFIRMED",
+  "note": "The submission returned a hash, but the canonical Studio-dev RPC later returned transaction not found. No deployment address or success is claimed; redeploy only after resolving the RPC/provider issue."
+}
