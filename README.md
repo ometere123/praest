@@ -1,158 +1,55 @@
 # PRAEST
 
-**GenLayer-native accountability for digital services and autonomous commerce.**
+PRAEST is a focused GenLayer Agent Tank: a buyer and provider freeze a versioned agreement, lock bounded provenance-labelled evidence, open a dispute, and send only the ambiguous interpretation to GenLayer.
 
-PRAEST Agent Tank is a focused, direct-contract runtime: a buyer and provider freeze a versioned agreement, submit bounded evidence, dispute a failure, and ask GenLayer to interpret only the ambiguous point. `ACCEPTED` is provisional; application success requires `FINALIZED` plus `FINISHED_WITH_RETURN`.
+## Network
 
-## Active Agent Tank runtime
-
-- Network: `studio-dev`, chain `61997`
+- Network: Studio-dev
+- Chain ID: `61997`
 - RPC: `https://studio-dev.genlayer.com/api`
-- Contracts: `contracts/genlayer/PRAESTAgreementVault.py` and `contracts/genlayer/PRAESTAdjudicator.py`
-- Deployment manifest: [`deployments/agent-tank.json`](deployments/agent-tank.json)
-- Browser wallet: injected EIP-1193 only; no Privy, WorkOS, backend, database, or server-held signer
-- Agent surfaces: [`packages/sdk-typescript`](packages/sdk-typescript), [`packages/mcp`](packages/mcp), [`skills/praest/SKILL.md`](skills/praest/SKILL.md)
+- Explorer: `https://explorer-studio-dev.genlayer.com/`
+- Runner: `py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng`
 
-The former full-product architecture is preserved on the archival branch `full-product-pre-agent-tank`; its production roadmap remains in the historical documentation.
-See [`docs/AGENT_TANK_STATUS.md`](docs/AGENT_TANK_STATUS.md) for the exact evidence boundary and remaining external blockers.
+The canonical deployment record is [`deployments/agent-tank.json`](deployments/agent-tank.json). It is `UNCONFIRMED` until both contracts have finalized with `FINISHED_WITH_RETURN`; a transaction hash alone is never treated as deployment proof.
 
-PRAEST turns promises into verifiable obligations: define an agreement, attach value, observe delivery, preserve evidence, resolve ambiguous failures through GenLayer, wait for appeal/finality, deliver the finalized decision through Hyperlane, execute settlement locally on the destination chain, and publish a verifiable receipt.
+## Runtime
 
-## Product surfaces
+The active submission has no persistent PRAEST backend, database, API key, server-held signer, WorkOS, Privy, EVM destination runtime, Solana runtime, or bridge. The browser uses an injected EIP-1193 wallet. Agents use the direct TypeScript SDK, direct Python JSON-RPC reader, MCP surface, or [`skills/praest/SKILL.md`](skills/praest/SKILL.md).
 
-- **Product** — customer/provider/enterprise/agent workflows: services, agreements, monitoring, evidence, incidents, disputes, appeals, decisions, escrow, settlements, agents, x402, event resolution, analytics and reputation.
-- **Control Plane** — PRAEST operations: probes, workflows, StudioNet, routes, Hyperlane, ISMs, system wallets, reconciliation, billing, security and audit.
-- **Developer Platform** — REST/OpenAPI, TypeScript SDK, Python SDK, CLI, MCP, x402 and Resolution API.
-- **Explorer** — public-safe lineage for agreements, cases, decisions, instructions, Hyperlane messages, settlements and receipts.
+The two contracts are:
 
-`packages/config/src/routes.json` is the frozen route catalog and currently resolves 165 product/control/developer/explorer URLs.
+1. `PRAESTAgreementVault` — deterministic counterparties, versioned terms and policy, evidence lock, dispute binding, provisional result, finality gate, and exactly-once receipt materialization.
+2. `PRAESTAdjudicator` — bounded GenLayer nondeterministic interpretation with substantive validator comparison and fail-closed `UNDETERMINED`.
 
-## Current execution architecture
+Lifecycle:
 
 ```text
-service / agent / event obligation
-        ↓
-monitoring + execution evidence
-        ↓
-incident / claim / dispute
-        ↓
-deterministic evaluation where possible
-        ↓
-GenLayer StudioNet adjudication
-        ↓
-accepted / appealable (provisional)
-        ↓
-FINALIZED
-        ↓
-deterministic settlement engine
-        ↓
-DecisionOutbox on StudioNet
-        ↓
-PRAEST Studio relay (non-custodial trust boundary)
-        ↓
-StudioDecisionGateway on zkSync Sepolia
-        ↓
-Hyperlane GMP message
-        ↓
-destination Mailbox + real ISM
-        ↓
-PRAEST destination receiver / Solana recipient
-        ↓
-local escrow execution
-        ↓
-independent reconciliation
-        ↓
-PRAEST receipt + reputation / TVG
+PROPOSED → ACTIVE → DELIVERY → DISPUTED → PROVISIONAL_RESULT → FINALIZED → receipt
 ```
 
-Hyperlane normally transports **decision bytes**, not customer funds. Destination value remains on the chain where settlement occurs.
+`ACCEPTED`/provisional results are not final. Downstream materialization requires an explicitly finalized result and successful execution.
 
-## Testnet route mesh
-
-The route engine is registry-driven. The included testnet configuration covers:
-
-- zkSync Sepolia — StudioNet Hyperlane origin/hub and optional destination
-- Ethereum Sepolia
-- Base Sepolia
-- Arbitrum Sepolia
-- Optimism Sepolia
-- Polygon Amoy
-- Scroll Sepolia
-- Linea Sepolia
-- Solana Testnet (`solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z`)
-
-Arc is not falsely advertised as a Hyperlane route because an official Hyperlane Core deployment has not been verified in the frozen registry data. The generic transport/route model means another supported EVM route is configuration + receiver deployment rather than new product logic.
-
-## Quick start
+## Development
 
 ```bash
-cp .env.example .env.local
 npm install
-npm run doctor
-npm run db:migrate
-npm run seed:routes
-npm run dev
+npm run verify:repo
+npm run build
+npm run typecheck
+npm test
 ```
 
-Then configure WorkOS, Privy, Supabase/Postgres, Upstash, Temporal, ClickHouse, R2, AWS, StudioNet, funded testnet deployers, Hyperlane, Stripe and the other providers listed in `.env.example`.
+For a credentialed deployment, keep the private key in the ignored `.env.local` file:
 
-Deployment/verification order is documented in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
-
-## Repository layout
-
-```text
-apps/
-  web/       Next.js Product + Control + Developer + Explorer
-  api/       NestJS/Fastify control/API plane
-  worker/    Temporal durable workflows
-  bridge/    StudioNet → zkSync Hyperlane relay and destination reconciler
-  probe/     AWS Lambda regional probe
-  relayer/   Hyperlane relayer runtime
-contracts/
-  genlayer/  StudioNet Intelligent Contracts
-  evm/       gateway, receiver, escrow and canonical wire decoder
-  solana/    Hyperlane Sealevel recipient + per-escrow SPL settlement
-packages/
-  database/  Drizzle schema + migration
-  protocol/  canonical PRAEST decision envelope
-  config/    routes + chain registry
-  schemas/   API schemas
-  sdk-typescript/
-  sdk-python/
-  cli/
-  mcp/
-infrastructure/
-  hyperlane/
-  clickhouse/
+```bash
+GENLAYER_STUDIONET_PRIVATE_KEY=0x...
+npm run genlayer:deploy
 ```
 
-## Hard safety invariants
+The deploy script obtains a fresh fee quote for each contract, deploys the vault first, passes its address as the adjudicator constructor argument, waits for finalization, verifies execution success, and only then writes addresses to the manifest.
 
-- GenLayer `ACCEPTED` is not final.
-- No irreversible settlement until GenLayer finality.
-- StudioNet cannot directly call Hyperlane; the explicit relay is documented as a trust boundary.
-- Production settlement never uses an always-true ISM.
-- Hyperlane transport replay protection is supplemented by PRAEST `instructionId` replay protection and escrow state-machine protection.
-- Destination escrow binds agreement, asset, payer, provider, customer and customer-remedy cap locally.
-- Collector infrastructure failure is `UNKNOWN/COLLECTOR_ERROR`, not a service outage.
-- Party evidence is provenance-labelled; public evidence can be independently re-fetched by validators.
-- Secrets are not committed; service/integration/webhook credentials are encrypted at rest before database storage.
-- Browser escrow funding is non-custodial: the user's wallet signs, then PRAEST independently verifies chain state.
+## Verification boundary
 
-## Verification truthfulness
+`npm run verify:repo` performs focused static checks and Python syntax validation. Direct Mode, GenVM lint, dependency-resolved JavaScript checks, live Studio-dev deployment, live nondeterministic adjudication, Vercel/browser proof, and clean-room clone results are recorded as pending until they actually run. See [`docs/AGENT_TANK_STATUS.md`](docs/AGENT_TANK_STATUS.md).
 
-This source bundle has static verification tooling in `scripts/verify-repo.mjs` and environment/toolchain checks in `scripts/doctor.mjs`. The execution environment used to assemble this repository did not provide Foundry, Rust/Cargo or Solana CLI and dependency installation was not reliable, so native EVM/Solana compilation and credential-bound live testnet proofs are explicitly marked **pending local proof**, not falsely reported as passed. See [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md).
-
-## Agent handoff
-
-Read, in order:
-
-1. `AGENTS.md`
-2. `docs/ARCHITECTURE.md`
-3. `docs/TRUST_MODEL.md`
-4. `docs/IMPLEMENTATION_STATUS.md`
-5. `docs/DEPLOYMENT.md`
-6. `docs/HANDOFF.md`
-7. `docs/REQUIREMENTS_TRACEABILITY.md`
-
-Do not reduce scope or replace real integrations with mocks in order to make checks green.
+The previous full-product implementation is preserved on the archival branch `full-product-pre-agent-tank`; it is not part of the active submission tree.

@@ -15,13 +15,10 @@
     "lint": "turbo lint",
     "doctor": "node scripts/doctor.mjs",
     "verify:repo": "node scripts/verify-repo.mjs",
-    "seed:routes": "tsx scripts/seed-routes.ts",
     "genlayer:deploy": "tsx scripts/deploy-focused-genlayer.ts",
-    "zip": "node scripts/package.mjs",
-    "verify:release": "node scripts/verify-repo.mjs && node scripts/doctor.mjs"
+    "verify:release": "node scripts/verify-repo.mjs"
   },
   "devDependencies": {
-    "@openzeppelin/contracts": "^5.4.0",
     "@types/node": "^22.15.0",
     "tsx": "^4.20.0",
     "turbo": "^2.5.0",

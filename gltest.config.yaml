@@ -1,0 +1,13 @@
+networks:
+  default: studioDevnet
+  studioDevnet:
+    id: 61997
+    url: https://studio-dev.genlayer.com/api
+    chain_type: studionet
+    accounts:
+      - ${GENLAYER_STUDIONET_PRIVATE_KEY}
+  studionet: {}
+paths:
+  contracts: "."
+  artifacts: "contracts/genlayer/artifacts"
+environment: .env.local

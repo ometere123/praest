@@ -1,9 +1,5 @@
 import "./globals.css";
-import { Inter, JetBrains_Mono } from "next/font/google";
 import Providers from "@/components/Providers";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono-brand", display: "swap" });
 
 export const metadata = {
   metadataBase: new URL(process.env.PRAEST_APP_URL || "http://localhost:3000"),
@@ -24,10 +20,8 @@ const themeInit = `(function(){try{var t=localStorage.getItem('praest-theme');if
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable}`}>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
-      </head>
+    <html lang="en">
+      <head><script dangerouslySetInnerHTML={{ __html: themeInit }} /></head>
       <body>
         <Providers>{children}</Providers>
       </body>

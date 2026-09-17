@@ -1,25 +1,40 @@
-export const STUDIO_DEV = {alias: "studio-dev", chainId: 61997, rpc: "https://studio-dev.genlayer.com/api", explorer: "https://explorer-studio-dev.genlayer.com/"} as const;
+import {createClient, isSuccessful} from "genlayer-js";
+import {studioDevnet} from "genlayer-js/chains";
+import {TransactionHashVariant, type Account, type Address, type GenLayerClient, type GenLayerTransaction} from "genlayer-js/types";
 
-export type Provider = {request(args: {method: string; params?: unknown[]}): Promise<any>};
-export type TxTruth = {txId: string; consensus: "ACCEPTED" | "FINALIZED" | "UNDETERMINED" | "CANCELED"; execution: "FINISHED_WITH_RETURN" | "FAILED" | "PENDING" | "UNKNOWN"};
+export const STUDIO_DEV = {
+  alias: "studio-dev",
+  chainId: 61997,
+  rpc: "https://studio-dev.genlayer.com/api",
+  explorer: "https://explorer-studio-dev.genlayer.com/",
+} as const;
 
-/** Direct browser-wallet surface. No PRAEST API, database, or server-held signer is involved. */
+export type Eip1193Provider = {request(args: {method: string; params?: unknown[]}): Promise<unknown>};
+export type DirectClientConfig = {account?: Account | Address; provider?: Eip1193Provider};
+export type TransactionTruth = {txId: `0x${string}`; finalized: boolean; successful: boolean; transaction: GenLayerTransaction};
+
+export const applicationSuccess = (transaction: GenLayerTransaction) => isSuccessful(transaction);
+
+/** Direct GenLayer client. It has no PRAEST API, database, or server-held signer. */
 export class PraestDirectClient {
-  constructor(public readonly provider: Provider, public readonly network = STUDIO_DEV) {}
-  async assertNetwork() {
-    const chainId = await this.provider.request({method: "eth_chainId"});
-    if (Number.parseInt(String(chainId), 16) !== this.network.chainId) throw new Error(`WRONG_NETWORK:${chainId}`);
-  }
-  async accounts(): Promise<string[]> { return this.provider.request({method: "eth_accounts"}); }
-  async estimateFees(): Promise<any> { return this.provider.request({method: "eth_estimateGas", params: [{}]); }
-  async submit(to: string, data: string, value = "0x0"): Promise<string> {
-    await this.assertNetwork();
-    const [from] = await this.accounts();
-    if (!from) throw new Error("WALLET_NOT_CONNECTED");
-    await this.estimateFees();
-    return this.provider.request({method: "eth_sendTransaction", params: [{from, to, data, value}]});
-  }
-  read(to: string, data: string): Promise<string> { return this.provider.request({method: "eth_call", params: [{to, data}, "latest"]}); }
-}
+  readonly client: GenLayerClient<any>;
 
-export function applicationSuccess(t: TxTruth): boolean { return (t.consensus === "ACCEPTED" || t.consensus === "FINALIZED") && t.execution === "FINISHED_WITH_RETURN"; }
+  constructor(config: DirectClientConfig = {}) {
+    this.client = createClient({chain: studioDevnet, ...(config.account ? {account: config.account} : {}), ...(config.provider ? {provider: config.provider} : {})} as any);
+  }
+
+  async readFinal(address: Address, functionName: string, args: unknown[] = []) {
+    return this.client.readContract({address, functionName, args: args as never[], transactionHashVariant: TransactionHashVariant.LATEST_FINAL} as never);
+  }
+
+  async writeFinal(address: Address, functionName: string, args: unknown[] = [], value = 0n): Promise<TransactionTruth> {
+    const account = this.client.account;
+    if (!account || typeof account === "string") throw new Error("SIGNING_ACCOUNT_REQUIRED");
+    const estimate = await this.client.estimateTransactionFeesForWrite({address, functionName, args: args as never[], account, value} as never);
+    const txId = await this.client.writeContract({account, address, functionName, args: args as never[], value, fees: {distribution: estimate.distribution, feeValue: estimate.feeValue, ...(estimate.messageAllocations ? {messageAllocations: estimate.messageAllocations} : {})}} as never);
+    const transaction = await this.client.waitForFinalization({hash: txId, retries: 240, interval: 5000, fullTransaction: true});
+    return {txId, finalized: true, successful: isSuccessful(transaction), transaction};
+  }
+
+  explorerUrl(txId: string) { return `${STUDIO_DEV.explorer}tx/${txId}`; }
+}

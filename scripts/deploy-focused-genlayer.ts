@@ -7,7 +7,7 @@ import {isSuccessful} from "genlayer-js";
 import * as chains from "genlayer-js/chains";
 
 if (existsSync(".env.local")) loadEnv({path: ".env.local"});
-const names = ["PRAESTAgreementVault", "PRAESTAdjudicator"];
+const names = ["PRAESTAgreementVault"];
 const sourceCommit = process.env.SOURCE_COMMIT || execFileSync("git", ["rev-parse", "HEAD"], {encoding: "utf8"}).trim();
 async function main() {
   const pk = process.env.GENLAYER_STUDIONET_PRIVATE_KEY as `0x${string}` | undefined;
@@ -31,6 +31,19 @@ async function main() {
     manifest.contracts[name] = {deploymentTx: tx, address, execution: receipt.txExecutionResultName};
     await writeFile("deployments/agent-tank.json", JSON.stringify(manifest, null, 2));
   }
+  const vault = manifest.contracts.PRAESTAgreementVault.address;
+  const name = "PRAESTAdjudicator";
+  const code = await readFile(`contracts/genlayer/${name}.py`, "utf8");
+  const fees: any = await (client as any).estimateTransactionFees();
+  const tx = await (client as any).deployContract({account: createAccount(pk), code, args: [vault], fees: {distribution: fees.distribution, feeValue: fees.feeValue}});
+  manifest.contracts[name] = {deploymentTx: tx, address: null};
+  await writeFile("deployments/agent-tank.json", JSON.stringify(manifest, null, 2));
+  const receipt: any = await (client as any).waitForFinalization({hash: tx, retries: 240, interval: 5000});
+  if (!isSuccessful(receipt)) throw new Error(`${name} finalized without successful execution: ${receipt?.statusName || "unknown status"} / ${receipt?.txExecutionResultName || "unknown execution"}`);
+  const address = receipt?.txDataDecoded?.contractAddress || receipt?.contractAddress || receipt?.data?.contractAddress || receipt?.consensus_data?.contract_address || receipt?.recipient;
+  if (!address) throw new Error(`${name} finalized but receipt exposed no contract address`);
+  manifest.contracts[name] = {deploymentTx: tx, address, constructorArgs: [vault], execution: receipt.txExecutionResultName};
+  await writeFile("deployments/agent-tank.json", JSON.stringify(manifest, null, 2));
   manifest.status = "DEPLOYED";
   await writeFile("deployments/agent-tank.json", JSON.stringify(manifest, null, 2));
   console.log(JSON.stringify(manifest, null, 2));

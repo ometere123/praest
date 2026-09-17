@@ -5,12 +5,16 @@
   "explorer": "https://explorer-studio-dev.genlayer.com/",
   "contracts": {
     "PRAESTAgreementVault": {
-      "deploymentTx": "0x61405e6140096caaf354f44d824552854496caa8195674136c9e5bc1ef63c909",
+      "deploymentTx": null,
+      "address": null
+    },
+    "PRAESTAdjudicator": {
+      "deploymentTx": null,
       "address": null
     }
   },
-  "sourceCommit": "a3b4bedf7654007daaeb3738aa93faab94229c5a",
-  "status": "UNCONFIRMED",
+  "sourceCommit": "UNRECORDED",
+  "status": "NOT_DEPLOYED",
   "runtimePin": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng",
-  "note": "The prior submission returned a hash, but the canonical Studio-dev RPC later returned transaction not found. No deployment address or success is claimed."
+  "note": "No live deployment is recorded for the current source. Run scripts/deploy-focused-genlayer.ts with a funded Studio-dev key to create a fee-aware, finalized, successful manifest."
 }

@@ -1,22 +1,58 @@
+"""Small direct JSON-RPC reader for PRAEST's GenLayer deployment.
+
+Signing is intentionally left to the caller's wallet or signing environment; this
+package never stores a PRAEST API key or server-held private key.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
+
 import httpx
-class PraestClient:
-    def __init__(self,base_url:str,api_key:str|None=None,access_token:str|None=None,timeout:float=30):
-        self.base_url=base_url.rstrip('/');self.headers={"content-type":"application/json"};
-        if api_key:self.headers["authorization"]=f"PraestKey {api_key}"
-        elif access_token:self.headers["authorization"]=f"Bearer {access_token}"
-        self.client=httpx.Client(base_url=self.base_url,headers=self.headers,timeout=timeout)
-    def _request(self,method,path,**kwargs):
-        r=self.client.request(method,f"/v1/{path.lstrip('/')}",**kwargs);r.raise_for_status();return r.json() if r.content else None
-    def list(self,resource):return self._request('GET',f'resources/{resource}')
-    def get(self,resource,id):return self._request('GET',f'resources/{resource}/{id}')
-    def create(self,resource,data):return self._request('POST',f'resources/{resource}',json=data)
-    def create_agreement(self,data):return self._request('POST','agreements',json=data)
-    def create_resolution(self,data):return self._request('POST','resolutions',json=data)
-    def adjudicate(self,case_id):return self._request('POST',f'cases/{case_id}/adjudicate')
-    def start_case_workflow(self,case_id):return self._request('POST',f'workflows/cases/{case_id}')
-    def appeal(self,adjudication_id,reason,value=None):return self._request('POST',f'adjudications/{adjudication_id}/appeal',json={'reason':reason,'value':value})
-    def finalize(self,adjudication_id):return self._request('POST',f'adjudications/{adjudication_id}/finalize')
-    def routes(self):return self._request('GET','routes')
-    def verify_settle_x402(self,data):return self._request('POST','x402/verify-settle',json=data)
-    def export_to_internet_court(self,case_id,data=None):return self._request('POST',f'internet-court/cases/{case_id}/export',json=data or {})
-    def close(self):self.client.close()
+
+
+@dataclass(frozen=True)
+class StudioDev:
+    chain_id: int = 61997
+    rpc: str = "https://studio-dev.genlayer.com/api"
+    explorer: str = "https://explorer-studio-dev.genlayer.com/"
+
+
+STUDIO_DEV = StudioDev()
+
+
+class PraestDirectClient:
+    """Read GenLayer state directly and submit caller-signed raw transactions."""
+
+    def __init__(self, rpc_url: str = STUDIO_DEV.rpc, timeout: float = 30.0):
+        if rpc_url != STUDIO_DEV.rpc:
+            raise ValueError(f"PRAEST is locked to {STUDIO_DEV.rpc}")
+        self.network = STUDIO_DEV
+        self.client = httpx.Client(base_url=rpc_url, timeout=timeout)
+        self._next_id = 1
+
+    def rpc(self, method: str, params: list[Any] | None = None) -> Any:
+        request_id = self._next_id
+        self._next_id += 1
+        response = self.client.post("", json={"jsonrpc": "2.0", "id": request_id, "method": method, "params": params or []})
+        response.raise_for_status()
+        payload = response.json()
+        if payload.get("error"):
+            raise RuntimeError(f"GenLayer RPC error: {payload['error']}")
+        return payload.get("result")
+
+    def read_contract(self, address: str, data: str, block: str = "finalized") -> str:
+        return self.rpc("eth_call", [{"to": address, "data": data}, block])
+
+    def submit_signed(self, raw_transaction: str) -> str:
+        return self.rpc("eth_sendRawTransaction", [raw_transaction])
+
+    def explorer_transaction(self, tx_id: str) -> str:
+        return f"{STUDIO_DEV.explorer}tx/{tx_id}"
+
+    def close(self) -> None:
+        self.client.close()
+
+
+PraestClient = PraestDirectClient
