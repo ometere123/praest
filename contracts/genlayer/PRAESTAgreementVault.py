@@ -21,6 +21,8 @@ class PRAESTAgreementVault(gl.contract.Contract):
     def _address(self, value: Address) -> str:
         if isinstance(value, bytes):
             return "0x" + value.hex()
+        if hasattr(value, "as_hex"):
+            return value.as_hex
         return str(value)
 
     def _agreement(self, agreement_id: str) -> dict:
