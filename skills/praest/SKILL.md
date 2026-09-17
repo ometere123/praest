@@ -5,7 +5,7 @@ description: Use PRAEST for wallet-native service agreements, provenance-labelle
 
 # PRAEST Agent Skill
 
-PRAEST is a direct-contract accountability primitive on Studio-dev (chain 61997). There is no PRAEST backend or API key.
+PRAEST is a direct-contract accountability primitive on Studio-dev (chain 61997), using the pinned `py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng` runner. There is no PRAEST backend or API key.
 
 1. Connect an injected EIP-1193 wallet and verify chain `0xf22d`.
 2. Create a versioned agreement in `PRAESTAgreementVault` with frozen terms, source policy, allowed outcomes, remedy bound, and immutable counterparties.

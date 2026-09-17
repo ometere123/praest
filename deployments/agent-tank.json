@@ -9,7 +9,8 @@
       "address": null
     }
   },
-  "sourceCommit": "UNRECORDED",
+  "sourceCommit": "a3b4bedf7654007daaeb3738aa93faab94229c5a",
   "status": "UNCONFIRMED",
-  "note": "The submission returned a hash, but the canonical Studio-dev RPC later returned transaction not found. No deployment address or success is claimed; redeploy only after resolving the RPC/provider issue."
+  "runtimePin": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng",
+  "note": "The prior submission returned a hash, but the canonical Studio-dev RPC later returned transaction not found. No deployment address or success is claimed."
 }

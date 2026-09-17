@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-16T21:05:42.672Z",
+  "generatedAt": "2026-09-17T03:30:29.059Z",
   "passes": [
     "present README.md",
     "present contracts/genlayer/PRAESTAgreementVault.py",
@@ -13,5 +13,5 @@
     "live deployment and dependency-resolved typecheck require network/runtime credentials"
   ],
   "failures": [],
-  "fileCount": 975
+  "fileCount": 976
 }
