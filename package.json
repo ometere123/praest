@@ -19,7 +19,7 @@
     "verify:release": "node scripts/verify-repo.mjs"
   },
   "devDependencies": {
-    "@types/node": "^22.15.0",
+    "@types/node": "^26.5.1",
     "tsx": "^4.20.0",
     "turbo": "^2.5.0",
     "typescript": "^5.9.0",
